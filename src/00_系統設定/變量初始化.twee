@@ -1,0 +1,7 @@
+:: StoryInit
+/* 這裡是遊戲啟動時，電腦只會執行一次的準備區 */
+/* 不需要寫 if undefined，因為這裡保證只跑一次 */
+
+<<set $bladder to 0>>      /* 膀胱初始值 */
+<<set $money to 100>>      /* 初始金錢 */
+<<set $shyness to 0>>      /* 羞恥度 */
