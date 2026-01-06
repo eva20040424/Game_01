@@ -1,0 +1,38 @@
+:: Start
+/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
+<div style="text-align: center; margin-top: 5%;">
+    <h1>✦ 角色創建 ✦</h1>
+    <hr style="width: 50%; border-color: #ff69b4;">
+    
+    <p>歡迎來到《慾門》。</p>
+    <p>在意識沉入肉體之前，請確認妳的身份資訊。</p>
+    <br>
+
+    /* --- 輸入區塊 (深色背景框) --- */
+    <div style="background-color: #333; padding: 20px; border-radius: 10px; display: inline-block; text-align: left; width: 300px;">
+        
+        /* 名字輸入框 */
+        <p><b>📇 本名：</b> <br>
+        <<textbox "$name" "恬羽">></p>
+        
+        /* 暱稱輸入框 */
+        <p><b>🏷️ 暱稱：</b> <br>
+        <<textbox "$nick" "羽兒">></p>
+
+        <hr style="border-style: dashed; opacity: 0.3;">
+
+        /* 權能天賦展示 */
+        <p style="color: #ff99cc;"><b>🔒 核心天賦：慾門 · 共生</b></p>
+        <p style="font-size: 0.9em; color: #aaa;">
+        ● 膀胱容量強制鎖定：2000ml<br>
+        ● 排泄功能：<span style="color:red">已封印 (需權限)</span><br>
+        </p>
+
+    </div>
+
+    <br><br><br>
+    
+    /* 按鈕：前往下一個場景 */
+    [[確認設定，從「羽之繭」甦醒 -> 羽之繭_主介面]]
+
+</div>

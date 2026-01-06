@@ -7,3 +7,6 @@
 /* 2. 身體數值設定 */
 <<set $bladder to 0>>         /* 膀胱容量 */
 <<set $money to 100>>         /* 金錢 */
+
+/* 3. 時間系統 */
+<<set $gameDate to new Date()>> /* 設定為當前時間 */
