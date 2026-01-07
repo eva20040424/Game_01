@@ -377,9 +377,9 @@ Example:</script><tw-passagedata pid="1" name=":TWINE_DATA" tags="" position="10
         &lt;/div&gt;
     &lt;/details&gt;
 
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="4" name="組件_時間" tags="widget" position="475,100" size="100,100">/* 顯示時間組件 */
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="4" name="widget_Time" tags="widget" position="475,100" size="100,100">/* 顯示時間組件 */
 /* 格式：第1年 8月31日 07:00 星期日 */
-&lt;&lt;widget &quot;顯示時間&quot;&gt;&gt;
+&lt;&lt;widget &quot;Time_Display&quot;&gt;&gt;
     /* 年份計算：當前年份 - 起始年份 + 1 */
     &lt;&lt;set _yearStr to &quot;第&quot; + ($gameDate.getFullYear() - $startYear + 1) + &quot;年&quot;&gt;&gt;
     
@@ -397,10 +397,10 @@ Example:</script><tw-passagedata pid="1" name=":TWINE_DATA" tags="" position="10
 
 /* 時間流逝組件 */
 /* 用法：&lt;&lt;時間流逝 60&gt;&gt; 代表主角主觀經歷了 60 分鐘 */
-&lt;&lt;widget &quot;時間流逝&quot;&gt;&gt;
+&lt;&lt;widget &quot;Time_Over&quot;&gt;&gt;
     &lt;&lt;set _minutes to $args[0] || 0&gt;&gt;
     &lt;&lt;set $gameDate.setMinutes($gameDate.getMinutes() + _minutes)&gt;&gt;
-&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="5" name="組件_AI" tags="widget" position="600,100" size="100,100">/* === AI 數據接收器 widget === */
+&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="5" name="widget_AI" tags="widget" position="600,100" size="100,100">/* === AI 數據接收器 widget === */
 &lt;&lt;widget &quot;parse_ai_data&quot;&gt;&gt;
     &lt;&lt;script&gt;&gt;
         // 1. 取得傳入的參數 (AI 的整段回覆)

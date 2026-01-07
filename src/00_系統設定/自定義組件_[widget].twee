@@ -2,7 +2,7 @@
 
 /* 顯示時間組件 */
 /* 格式：第1年 8月31日 07:00 星期日 */
-<<widget "顯示時間">>
+<<widget "Time_Display">>
     /* 年份計算：當前年份 - 起始年份 + 1 */
     <<set _yearStr to "第" + ($gameDate.getFullYear() - $startYear + 1) + "年">>
     
@@ -20,7 +20,7 @@
 
 /* 時間流逝組件 */
 /* 用法：<<時間流逝 60>> 代表主角主觀經歷了 60 分鐘 */
-<<widget "時間流逝">>
+<<widget "Time_Over">>
     <<set _minutes to $args[0] || 0>>
     <<set $gameDate.setMinutes($gameDate.getMinutes() + _minutes)>>
 <</widget>>
