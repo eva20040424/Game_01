@@ -24,6 +24,28 @@
             <</script>>
         </div>
 
+/* 💠 動態空間按鈕 💠 */
+    <<if tags().includes("隨身空間")>>
+        
+        /* 【情況 A：身處隨身空間內】 -> 顯示離開按鈕 */
+        <<button "🚪 返回現實">>
+            /* 跳轉到處理返回邏輯的系統頁面 */
+            <<goto "返回現實">>
+        <</button>>
+
+    <<else>>
+
+        /* 【情況 B：身處現實世界】 -> 顯示進入按鈕 */
+        <<button "🌌 進入隨身空間">>
+            /* 1. 存檔：記錄現在在哪個劇情點，存入變數 $lastRealWorldPassage */
+            <<set $lastRealWorldPassage to passage()>>
+            
+            /* 2. 傳送：前往隨身空間樞紐 */
+            <<goto "💠隨身空間💠">>
+        <</button>>
+
+    <</if>>
+
         <details open>
             <summary>💗 生理機能監測</summary>
             
