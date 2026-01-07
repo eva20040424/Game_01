@@ -24,3 +24,36 @@
     <<set _minutes to $args[0] || 0>>
     <<set $gameDate.setMinutes($gameDate.getMinutes() + _minutes)>>
 <</widget>>
+
+:: 組件_AI [widget]
+
+/* === AI 數據接收器 widget === */
+<<widget "parse_ai_data">>
+    <<script>>
+        // 1. 取得傳入的參數 (AI 的整段回覆)
+        var ai_text = State.variables.args[0];
+        
+        // 2. 定義標記
+        var start_tag = ":::TWINE_DATA";
+        var end_tag = ":::";
+        
+        // 3. 尋找並擷取數據塊
+        var start_index = ai_text.indexOf(start_tag);
+        
+        if (start_index !== -1) {
+            // 找出數據塊的結尾位置
+            // 注意：我們要從 start_index 之後開始找結尾
+            var end_index = ai_text.indexOf(end_tag, start_index + start_tag.length);
+            
+            if (end_index !== -1) {
+                //擷取純代碼部分
+                var data_block = ai_text.substring(start_index + start_tag.length, end_index);
+                
+                // 4. 執行代碼 (將字串轉為 Twine 指令)
+                new Wikifier(null, data_block);
+                
+                console.log("Twine Data Parsed Successfully!");
+            }
+        }
+    <</script>>
+<</widget>>

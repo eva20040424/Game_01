@@ -145,3 +145,19 @@ details[open] summary::before {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* === ⏳ 側邊欄時間顯示樣式 === */
+.time-display-box {
+    background: rgba(0, 20, 40, 0.6); /* 深藍色半透明背景 */
+    border: 1px solid #00aaff;        /* 亮藍色邊框 */
+    color: #00eeff;                   /* 霓虹藍文字 */
+    text-shadow: 0 0 5px #00aaff;     /* 文字發光效果 */
+    padding: 8px 5px;
+    text-align: center;
+    border-radius: 4px;
+    font-family: "Consolas", monospace;
+    font-weight: bold;
+    font-size: 1.1em;
+    letter-spacing: 1px;
+    box-shadow: inset 0 0 10px rgba(0, 170, 255, 0.2);
+}

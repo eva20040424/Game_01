@@ -1,66 +1,95 @@
 :: StoryCaption
-<div id="status-panel" class="status-root">
+<div id="story-caption-content">
+
+    <div class="time-display-box">
+        ⏳ <<顯示時間>>
+    </div>
     
-    <div class="panel-control">
-        <span class="control-label">👁️ 心眼模式</span>
-        <label class="switch">
-            <<checkbox "$enable_ai_status" false true autocheck>>
-            <span class="slider"></span>
-        </label>
-        <<script>>
-            $(document).on('change', '#status-panel input[type="checkbox"]', function() {
-                if(this.checked) {
-                    $('#status-panel').addClass('ai-active');
-                } else {
-                    $('#status-panel').removeClass('ai-active');
-                }
-            });
-            // 初始化：如果讀檔時是開啟的，直接加上 class
-            if(State.variables.enable_ai_status) {
-                $('#status-panel').addClass('ai-active');
-            }
-        <</script>>
+    <hr style="border-color: #444; margin: 8px 0;">
+
+    <div id="status-panel" class="status-root">
+        
+        <div class="panel-control">
+            <span class="control-label">👁️ 心眼模式</span>
+            <label class="switch">
+                <<checkbox "$enable_ai_status" false true autocheck>>
+                <span class="slider"></span>
+            </label>
+            <<script>>
+                $(document).on('change', '#status-panel input[type="checkbox"]', function() {
+                    if(this.checked) $('#status-panel').addClass('ai-active');
+                    else $('#status-panel').removeClass('ai-active');
+                });
+                if(State.variables.enable_ai_status) $('#status-panel').addClass('ai-active');
+            <</script>>
+        </div>
+
+        <details open>
+            <summary>💗 生理機能監測</summary>
+            
+            <div class="tree-row">
+                <div class="hard-data">
+                    ├─ 🚽 膀胱：[<span class="val">$sys_bladder_ml</span>ml] [<span class="status">$sys_bladder_state</span>]
+                </div>
+                <div class="soft-desc">$ai_desc_bladder</div>
+            </div>
+
+            <div class="tree-row">
+                <div class="hard-data">
+                    ├─ ⛩️ 宮頸：[深度:<span class="val">$sys_womb_depth</span>cm] [<span class="status">$sys_womb_state</span>]
+                </div>
+                <div class="soft-desc">$ai_desc_womb</div>
+            </div>
+            
+            <div class="tree-row">
+                 <div class="hard-data">
+                    └─ 🍬 肛腸：[狀態:<span class="status">$sys_anal_state</span>]
+                </div>
+                 <<if $ai_desc_anal>>
+                    <div class="soft-desc">$ai_desc_anal</div>
+                 <</if>>
+            </div>
+        </details>
+
+        <details>
+            <summary>🎒 裝備與狀態</summary>
+            <div class="tree-row">
+                <div class="hard-data">├─ 👙 內衣：[已破損]</div>
+            </div>
+            <div class="tree-row">
+                <div class="hard-data">└─ 🔌 玩具：[震動:高頻]</div>
+            </div>
+        </details>
     </div>
 
-    <details open>
-        <summary>💗 生理機能監測</summary>
-        
-        <div class="tree-row">
-            <div class="hard-data">
-                ├─ 🚽 膀胱：[<span class="val">$sys_bladder_ml</span>ml] [<span class="status">$sys_bladder_state</span>]
-            </div>
-            <div class="soft-desc">
-                $ai_desc_bladder
-            </div>
-        </div>
-
-        <div class="tree-row">
-            <div class="hard-data">
-                ├─ ⛩️ 宮頸：[深度:<span class="val">$sys_womb_depth</span>cm] [<span class="status">$sys_womb_state</span>]
-            </div>
-            <div class="soft-desc">
-                $ai_desc_womb
-            </div>
-        </div>
-        
-        <div class="tree-row">
-             <div class="hard-data">
-                └─ 🍬 肛腸：[狀態:<span class="status">$sys_anal_state</span>]
-            </div>
-             <<if $ai_desc_anal>>
-                <div class="soft-desc">$ai_desc_anal</div>
-             <</if>>
-        </div>
-
-    </details>
+    <hr style="border-color: #444; margin: 10px 0;">
 
     <details>
-        <summary>🎒 裝備與狀態</summary>
-        <div class="tree-row">
-            <div class="hard-data">├─ 👙 內衣：[已破損]</div>
+        <summary>🤖 AI 同步接口</summary>
+        <div style="margin-top: 5px; font-size: 0.8em; color: #888;">
+            請將 AI 回覆貼入下方：
         </div>
-        <div class="tree-row">
-            <div class="hard-data">└─ 🔌 玩具：[震動:高頻]</div>
+        <<textbox "$temp_ai_input" "" autofocus>>
+        <<script>>
+            $(document).on('input', 'input[name="textbox-temp_ai_input"]', function() {
+                var $input = $(this);
+                var text = $input.val();
+                if (text.includes(":::TWINE_DATA")) {
+                    var safeText = text.replace(/"/g, '\\"');
+                    $.wiki('<<parse_ai_data "' + safeText + '">>');
+                    $input.val("✅ 狀態已同步！");
+                    setTimeout(function() { 
+                        $input.val(""); 
+                        Engine.show(); 
+                    }, 1000);
+                }
+            });
+        <</script>>
+        <div style="margin-top:5px;">
+           <<button "📋 複製 Prompt">>
+               <<run navigator.clipboard.writeText(setup.ai_prompt)>>
+               <<run alert("指令已複製！")>>
+           <</button>>
         </div>
     </details>
 
