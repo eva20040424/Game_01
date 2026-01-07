@@ -1,11 +1,11 @@
 :: Start
 /* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
 <div style="text-align: center; margin-top: 5%;">
-    <h1>✦ 角色創建 ✦</h1>
+    <h1>✦ 初始設定 ✦</h1>
     <hr style="width: 50%; border-color: #ff69b4;">
     
-    <p>歡迎來到《慾門》。</p>
-    <p>在意識沉入肉體之前，請確認妳的身份資訊。</p>
+    <p>歡迎來到《慾門》</p>
+    <p>在意識沉入肉體之前，請確認妳的身份資訊</p>
     <br>
 
     /* --- 輸入區塊 (深色背景框) --- */
@@ -21,12 +21,58 @@
 
         <hr style="border-style: dashed; opacity: 0.3;">
 
-        /* 權能天賦展示 */
-        <p style="color: #ff99cc;"><b>🔒 核心天賦：慾門 · 共生</b></p>
-        <p style="font-size: 0.9em; color: #aaa;">
-        ● 膀胱容量強制鎖定：2000ml<br>
-        ● 排泄功能：<span style="color:red">已封印 (需權限)</span><br>
+        /* --- AI 連結設定 (新增區塊) --- */
+        <p style="color: #66ccff;"><b>🤖 AI 連結設定 (Google AI Studio)</b></p>
+        
+        /* 模型選擇 */
+        <p style="font-size: 0.9em;"><b>🧠 模型選擇：</b><br>
+        <<listbox "$aiModel" autoselect>>
+            <<option "Gemini 3 Flash (快速)" "gemini-3-flash-preview">>
+            <<option "Gemini 3 Pro (強大)" "gemini-3-pro-preview">>
+        <</listbox>></p>
+
+        /* 金鑰管理：選擇舊有或輸入新增 */
+        <p style="font-size: 0.9em;"><b>🔑 API 金鑰管理：</b><br>
+        
+        /* 1. 若有存檔金鑰，顯示切換選單 */
+        <<if $keyVault.length > 0>>
+            <span style="font-size:0.8em; color:#aaa;">－ 從儲存庫切換：</span><br>
+            <<listbox "$apiKey" autoselect>>
+                <<optionsfrom $keyVault>>
+            <</listbox>><br>
+        <</if>>
+        
+        /* 2. 新增金鑰輸入框 */
+        <span style="font-size:0.8em; color:#aaa;">－ 或輸入新金鑰：</span><br>
+        <<textbox "_newKey" "">> 
+        <<button "💾 存入並使用">>
+            <<if _newKey neq "">>
+                <<run $keyVault.pushUnique(_newKey)>>
+                <<set $apiKey to _newKey>>
+                <<goto "Start">> /* 刷新頁面以更新列表 */
+            <</if>>
+        <</button>>
         </p>
+
+        /* 系統指令/破限詞輸入 (可調整大小) */
+        <p style="font-size: 0.9em;"><b>📝 系統指令 / AI 身分 / 破限詞：</b><br>
+        <<textarea "$systemPrompt" "">></p>
+        /* CSS 修正：強制讓 textarea 可以調整大小並符合容器寬度 */
+        <script>
+            $(document).one(":passagerender", function (ev) {
+                $(ev.content).find("textarea")
+                    .css({
+                        "width": "95%",
+                        "min-height": "80px",
+                        "resize": "vertical", 
+                        "background-color": "#222",
+                        "color": "#eee",
+                        "border": "1px solid #555"
+                    });
+            });
+        </script>
+
+        <hr style="border-style: dashed; opacity: 0.3;">
 
     </div>
 

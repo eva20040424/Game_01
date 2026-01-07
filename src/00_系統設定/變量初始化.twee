@@ -10,3 +10,9 @@
 
 /* 3. 時間系統 */
 <<set $gameDate to new Date()>> /* 設定為當前時間 */
+
+/* 4. AI 連結設定 */
+<<set $apiKey to "">>           /* 當前使用的金鑰 */
+<<set $keyVault to []>>         /* 金鑰儲存庫 */
+<<set $aiModel to "gemini-3-flash-preview">> /* 預設模型 */
+<<set $systemPrompt to "">>     /* 系統指令/破限詞 */
