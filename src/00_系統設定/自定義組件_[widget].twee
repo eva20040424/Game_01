@@ -1,0 +1,26 @@
+:: 組件_時間 [widget]
+
+/* 顯示時間組件 */
+/* 格式：第1年 8月31日 07:00 星期日 */
+<<widget "顯示時間">>
+    /* 年份計算：當前年份 - 起始年份 + 1 */
+    <<set _yearStr to "第" + ($gameDate.getFullYear() - $startYear + 1) + "年">>
+    
+    /* 日期與時間格式化 */
+    <<set _dateStr to ($gameDate.getMonth() + 1) + "月" + $gameDate.getDate() + "日">>
+    <<set _timeStr to $gameDate.getHours().toString().padStart(2, "0") + ":" + $gameDate.getMinutes().toString().padStart(2, "0")>>
+    
+    /* 星期計算 */
+    <<set _weekList to ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]>>
+    <<set _weekStr to _weekList[$gameDate.getDay()]>>
+
+    /* 組合輸出 */
+    <<print _yearStr + " " + _dateStr + " " + _timeStr + " " + _weekStr>>
+<</widget>>
+
+/* 時間流逝組件 */
+/* 用法：<<時間流逝 60>> 代表主角主觀經歷了 60 分鐘 */
+<<widget "時間流逝">>
+    <<set _minutes to $args[0] || 0>>
+    <<set $gameDate.setMinutes($gameDate.getMinutes() + _minutes)>>
+<</widget>>

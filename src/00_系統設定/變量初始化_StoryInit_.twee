@@ -1,0 +1,21 @@
+:: StoryInit
+
+/* 1. 角色名稱設定 */
+<<set $name to "">> /* 預設本名 */
+<<set $nick to "">> /* 預設暱稱 */
+
+/* 2. 身體數值設定 */
+<<set $bladder to 0>> /* 膀胱容量 */
+<<set $money to 100>> /* 金錢 */
+
+/* 3. 時間系統 */
+/* 核心邏輯：使用 2025 年僅為了讓 8/31 對應星期日，顯示層將強制轉為「第1年」 */
+/* 格式：new Date(年, 月-1, 日, 時, 分) */
+<<set $gameDate to new Date(2025, 7, 31, 7, 0)>>
+<<set $startYear to 2025>>
+
+/* 4. AI 連結設定 */
+<<set $apiKey to "">> /* 當前使用的金鑰 */
+<<set $keyVault to []>> /* 金鑰儲存庫 */
+<<set $aiModel to "gemini-3-flash-preview">> /* 預設模型 */
+<<set $systemPrompt to "">> /* 系統指令/破限詞 */
