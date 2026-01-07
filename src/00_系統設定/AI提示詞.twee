@@ -21,9 +21,9 @@ If false, keep them empty.
 ### 3. Output Format (STRICT)
 Do NOT use markdown code blocks. Use :::TWINE_DATA as delimiter.
 Example:
-:::TWINE_DATA
+ :::TWINE_DATA
 <<set $sys_bladder_ml to 450>>
 <<set $sys_bladder_state to "脹痛">>
 <<set $ai_desc_bladder to "恥骨聯合處痠軟無力...">>
-:::
+ :::
 `;

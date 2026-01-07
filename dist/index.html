@@ -100,7 +100,7 @@ var saveAs=saveAs||navigator.msSaveBlob&&navigator.msSaveBlob.bind(navigator)||f
 		<div id="init-lacking">Your browser lacks required capabilities. Please upgrade it or switch to another to continue.</div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://A1B2C3D4-E5F6-4000-8000-000000000001// --><tw-storydata name="慾門" startnode="7" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="A1B2C3D4-E5F6-4000-8000-000000000001" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* === 狀態欄主容器 === */
+	<!-- UUID://A1B2C3D4-E5F6-4000-8000-000000000001// --><tw-storydata name="慾門" startnode="5" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="A1B2C3D4-E5F6-4000-8000-000000000001" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* === 狀態欄主容器 === */
 #status-panel {
     font-family: "Consolas", "Monaco", "Courier New", monospace;
     font-size: 0.9em;
@@ -260,30 +260,7 @@ details[open] summary::before {
     font-size: 1.1em;
     letter-spacing: 1px;
     box-shadow: inset 0 0 10px rgba(0, 170, 255, 0.2);
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">setup.ai_prompt = `
-[SYSTEM INSTRUCTION: TWINE_STATUS_INTEGRATION]
-You are integrated with a Twine text adventure.
-At the END of every response, you MUST append a "Twine Data Block" wrapped in a unique fence.
-
-### 1. Hard Data Logic (Calculate these)
-- $sys_bladder_ml (0~2000): Urine volume. +50ml/turn.
-- $sys_bladder_state: Short status (e.g., "空虛", "正常", "脹痛", "極限").
-- $sys_womb_depth (0~20): Insertion depth cm.
-- $sys_womb_state: (e.g., "閉合", "被頂開", "紅腫").
-- $sys_anal_state: (e.g., "正常", "真空").
-
-### 2. Soft Description Logic (Write these)
-If $enable_ai_status is true, generate sensory-rich descriptions (20-30 words) for:
-- $ai_desc_bladder
-- $ai_desc_womb
-- $ai_desc_anal
-If false, keep them empty.
-
-### 3. Output Format (STRICT)
-Do NOT use markdown code blocks. Use :::TWINE_DATA as delimiter.
-Example:</script><tw-passagedata pid="1" name=":TWINE_DATA" tags="" position="100,100" size="100,100">&lt;&lt;set $sys_bladder_ml to 450&gt;&gt;
-&lt;&lt;set $sys_bladder_state to &quot;脹痛&quot;&gt;&gt;
-&lt;&lt;set $ai_desc_bladder to &quot;恥骨聯合處痠軟無力...&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name=":" tags="" position="225,100" size="100,100">`;</tw-passagedata><tw-passagedata pid="3" name="StoryCaption" tags="" position="350,100" size="100,100">&lt;div id=&quot;story-caption-content&quot;&gt;
+}</style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="StoryCaption" tags="" position="100,100" size="100,100">&lt;div id=&quot;story-caption-content&quot;&gt;
 
     &lt;div class=&quot;time-display-box&quot;&gt;
         ⏳ &lt;&lt;顯示時間&gt;&gt;
@@ -377,7 +354,7 @@ Example:</script><tw-passagedata pid="1" name=":TWINE_DATA" tags="" position="10
         &lt;/div&gt;
     &lt;/details&gt;
 
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="4" name="widget_Time" tags="widget" position="475,100" size="100,100">/* 顯示時間組件 */
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="2" name="widget_Time" tags="widget" position="225,100" size="100,100">/* 顯示時間組件 */
 /* 格式：第1年 8月31日 07:00 星期日 */
 &lt;&lt;widget &quot;Time_Display&quot;&gt;&gt;
     /* 年份計算：當前年份 - 起始年份 + 1 */
@@ -400,7 +377,7 @@ Example:</script><tw-passagedata pid="1" name=":TWINE_DATA" tags="" position="10
 &lt;&lt;widget &quot;Time_Over&quot;&gt;&gt;
     &lt;&lt;set _minutes to $args[0] || 0&gt;&gt;
     &lt;&lt;set $gameDate.setMinutes($gameDate.getMinutes() + _minutes)&gt;&gt;
-&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="5" name="widget_AI" tags="widget" position="600,100" size="100,100">/* === AI 數據接收器 widget === */
+&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="3" name="widget_AI" tags="widget" position="350,100" size="100,100">/* === AI 數據接收器 widget === */
 &lt;&lt;widget &quot;parse_ai_data&quot;&gt;&gt;
     &lt;&lt;script&gt;&gt;
         // 1. 取得傳入的參數 (AI 的整段回覆)
@@ -429,7 +406,7 @@ Example:</script><tw-passagedata pid="1" name=":TWINE_DATA" tags="" position="10
             }
         }
     &lt;&lt;/script&gt;&gt;
-&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="6" name="StoryInit" tags="" position="725,100" size="100,100">/* 1. 角色名稱設定 */
+&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="4" name="StoryInit" tags="" position="475,100" size="100,100">/* 1. 角色名稱設定 */
 &lt;&lt;set $name to &quot;&quot;&gt;&gt; /* 預設本名 */
 &lt;&lt;set $nick to &quot;&quot;&gt;&gt; /* 預設暱稱 */
 
@@ -460,7 +437,7 @@ Example:</script><tw-passagedata pid="1" name=":TWINE_DATA" tags="" position="10
 /* 描寫設為 空字串 */
 &lt;&lt;set $ai_desc_bladder to &quot;&quot;&gt;&gt;
 &lt;&lt;set $ai_desc_womb to &quot;&quot;&gt;&gt;
-&lt;&lt;set $ai_desc_anal to &quot;&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="7" name="Start" tags="" position="850,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
+&lt;&lt;set $ai_desc_anal to &quot;&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="5" name="Start" tags="" position="600,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
 &lt;div style=&quot;text-align: center; margin-top: 5%;&quot;&gt;
     &lt;h1&gt;✦ 初始設定 ✦&lt;/h1&gt;
     &lt;hr style=&quot;width: 50%; border-color: #ff69b4;&quot;&gt;
@@ -542,12 +519,12 @@ Example:</script><tw-passagedata pid="1" name=":TWINE_DATA" tags="" position="10
     /* 按鈕：前往下一個場景 */
     [[確認設定，從「羽之繭」甦醒 -&gt; 羽之繭_主介面]]
 
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="8" name="開門" tags="" position="975,100" size="100,100">宇宙諸界，隨心遨遊。
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="6" name="開門" tags="" position="725,100" size="100,100">宇宙諸界，隨心遨遊。
 今欲往？
 
 [[玄幻 · 世界01 -&gt; 世界01_主介面]]
 [[西幻 · 世界02 -&gt; 世界02_主介面]]
-[[關門 -&gt; 隨身空間_主介面]]</tw-passagedata><tw-passagedata pid="9" name="環形歸納區_主介面" tags="" position="1100,100" size="100,100"></tw-passagedata><tw-passagedata pid="10" name="羽之繭_主介面" tags="" position="1225,100" size="100,100"></tw-passagedata><tw-passagedata pid="11" name="資源培植區_主介面" tags="" position="100,225" size="100,100"></tw-passagedata><tw-passagedata pid="12" name="隨身空間_主介面" tags="" position="225,225" size="100,100">你回到隨身空間之中。
+[[關門 -&gt; 隨身空間_主介面]]</tw-passagedata><tw-passagedata pid="7" name="環形歸納區_主介面" tags="" position="850,100" size="100,100"></tw-passagedata><tw-passagedata pid="8" name="羽之繭_主介面" tags="" position="975,100" size="100,100"></tw-passagedata><tw-passagedata pid="9" name="資源培植區_主介面" tags="" position="1100,100" size="100,100"></tw-passagedata><tw-passagedata pid="10" name="隨身空間_主介面" tags="" position="1225,100" size="100,100">你回到隨身空間之中。
 
 [[開門！ -&gt; 開門_主介面]]
 [[羽之繭 -&gt; 羽之繭_主介面]]
