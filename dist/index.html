@@ -100,22 +100,290 @@ var saveAs=saveAs||navigator.msSaveBlob&&navigator.msSaveBlob.bind(navigator)||f
 		<div id="init-lacking">Your browser lacks required capabilities. Please upgrade it or switch to another to continue.</div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://A1B2C3D4-E5F6-4000-8000-000000000001// --><tw-storydata name="慾門" startnode="2" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="A1B2C3D4-E5F6-4000-8000-000000000001" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">/* 1. 角色名稱設定 */
-&lt;&lt;set $name to &quot;&quot;&gt;&gt;        /* 預設本名 */
-&lt;&lt;set $nick to &quot;&quot;&gt;&gt;      /* 預設暱稱 */
+	<!-- UUID://A1B2C3D4-E5F6-4000-8000-000000000001// --><tw-storydata name="慾門" startnode="4" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="A1B2C3D4-E5F6-4000-8000-000000000001" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* === 狀態欄主容器 === */
+#status-panel {
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    font-size: 0.9em;
+    line-height: 1.4;
+    color: #eee;
+    border: 1px solid #444;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+/* === 頂部開關控制區 === */
+.panel-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed #555;
+}
+
+.control-label {
+    font-weight: bold;
+    color: #ff7ae6;
+    text-shadow: 0 0 5px #ff7ae6;
+}
+
+/* === CSS 撥動開關 (Toggle Switch) === */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  vertical-align: middle; /* 讓開關與文字垂直對齊 */
+}
+
+/* 修正重點：讓 input 透明但覆蓋整個開關，確保能被點擊 */
+.switch input { 
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2; /* 確保在最上層 */
+  cursor: pointer;
+  margin: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #555;
+  transition: .4s;
+  border-radius: 20px;
+  z-index: 1;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #ff7ae6; /* 開啟時的粉色 */
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* === 折疊區塊 (Details/Summary) === */
+details {
+    margin-bottom: 5px;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #88ccff;
+    list-style: none;
+    padding: 2px 0;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+summary::before {
+  content: "▶ ";
+  font-size: 0.8em;
+}
+details[open] summary::before {
+  content: "▼ ";
+}
+
+/* === 樹狀結構與數據層 === */
+.tree-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 4px;
+}
+
+.hard-data {
+    color: #ccc;
+}
+.hard-data .val {
+    color: #aaddff;
+}
+.hard-data .status {
+    color: #ffaaaa;
+}
+
+/* === AI 軟描寫層 === */
+.soft-desc {
+    display: none;
+    margin-left: 20px;
+    font-size: 0.85em;
+    color: #ffccf0;
+    font-style: italic;
+    border-left: 2px solid #555;
+    padding-left: 5px;
+    margin-top: 2px;
+    animation: fadeIn 0.5s;
+}
+
+/* 當父容器被標記為 active 時，顯示軟描寫 */
+#status-panel.ai-active .soft-desc {
+    display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}</style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="StoryCaption" tags="" position="100,100" size="100,100">&lt;div id=&quot;status-panel&quot; class=&quot;status-root&quot;&gt;
+    
+    &lt;div class=&quot;panel-control&quot;&gt;
+        &lt;span class=&quot;control-label&quot;&gt;👁️ 心眼模式&lt;/span&gt;
+        
+        &lt;label class=&quot;switch&quot;&gt;
+            &lt;input type=&quot;checkbox&quot; id=&quot;ai-toggle-btn&quot;&gt;
+            &lt;span class=&quot;slider&quot;&gt;&lt;/span&gt;
+        &lt;/label&gt;
+    &lt;/div&gt;
+
+    &lt;&lt;script&gt;&gt;
+        // 當側邊欄渲染時執行
+        $(document).one(&#39;:passagerender&#39;, function (ev) {
+            // 1. 抓取剛剛建立的 HTML 開關
+            var $btn = $(ev.content).find(&#39;#ai-toggle-btn&#39;);
+            
+            // 2. 讀取 Twine 記憶的狀態，設定開關初始值 (打勾或取消)
+            // State.variables 就是 Twine 的 $變數庫
+            $btn.prop(&#39;checked&#39;, State.variables.enable_ai_status);
+
+            // 3. 監聽點擊事件
+            $btn.on(&#39;change&#39;, function() {
+                // 更新 Twine 變數
+                State.variables.enable_ai_status = this.checked;
+                
+                // 即時切換視覺效果 (展開/收起粉色字)
+                if(this.checked) {
+                    $(&#39;#status-panel&#39;).addClass(&#39;ai-active&#39;);
+                } else {
+                    $(&#39;#status-panel&#39;).removeClass(&#39;ai-active&#39;);
+                }
+            });
+            
+            // 4. 防呆：確保讀檔時如果本來就是開的，要加上 active class
+            if(State.variables.enable_ai_status) {
+                 $(ev.content).find(&#39;#status-panel&#39;).addClass(&#39;ai-active&#39;);
+            }
+        });
+    &lt;&lt;/script&gt;&gt;
+
+    &lt;details open&gt;
+        &lt;summary&gt;💗 生理機能監測&lt;/summary&gt;
+        
+        &lt;div class=&quot;tree-row&quot;&gt;
+            &lt;div class=&quot;hard-data&quot;&gt;
+                ├─ 🚽 膀胱：[&lt;span class=&quot;val&quot;&gt;$sys_bladder_ml&lt;/span&gt;ml] [&lt;span class=&quot;status&quot;&gt;$sys_bladder_state&lt;/span&gt;]
+            &lt;/div&gt;
+            &lt;div class=&quot;soft-desc&quot;&gt;
+                $ai_desc_bladder
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;tree-row&quot;&gt;
+            &lt;div class=&quot;hard-data&quot;&gt;
+                ├─ ⛩️ 宮頸：[深度:&lt;span class=&quot;val&quot;&gt;$sys_womb_depth&lt;/span&gt;cm] [&lt;span class=&quot;status&quot;&gt;$sys_womb_state&lt;/span&gt;]
+            &lt;/div&gt;
+            &lt;div class=&quot;soft-desc&quot;&gt;
+                $ai_desc_womb
+            &lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class=&quot;tree-row&quot;&gt;
+             &lt;div class=&quot;hard-data&quot;&gt;
+                └─ 🍬 肛腸：[狀態:&lt;span class=&quot;status&quot;&gt;$sys_anal_state&lt;/span&gt;]
+            &lt;/div&gt;
+             &lt;&lt;if $ai_desc_anal&gt;&gt;
+                &lt;div class=&quot;soft-desc&quot;&gt;$ai_desc_anal&lt;/div&gt;
+             &lt;&lt;/if&gt;&gt;
+        &lt;/div&gt;
+
+    &lt;/details&gt;
+
+    &lt;details&gt;
+        &lt;summary&gt;🎒 裝備與狀態&lt;/summary&gt;
+        &lt;div class=&quot;tree-row&quot;&gt;
+            &lt;div class=&quot;hard-data&quot;&gt;├─ 👙 內衣：[已破損]&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;tree-row&quot;&gt;
+            &lt;div class=&quot;hard-data&quot;&gt;└─ 🔌 玩具：[震動:高頻]&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/details&gt;
+
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="2" name="組件_時間" tags="widget" position="225,100" size="100,100">/* 顯示時間組件 */
+/* 格式：第1年 8月31日 07:00 星期日 */
+&lt;&lt;widget &quot;顯示時間&quot;&gt;&gt;
+    /* 年份計算：當前年份 - 起始年份 + 1 */
+    &lt;&lt;set _yearStr to &quot;第&quot; + ($gameDate.getFullYear() - $startYear + 1) + &quot;年&quot;&gt;&gt;
+    
+    /* 日期與時間格式化 */
+    &lt;&lt;set _dateStr to ($gameDate.getMonth() + 1) + &quot;月&quot; + $gameDate.getDate() + &quot;日&quot;&gt;&gt;
+    &lt;&lt;set _timeStr to $gameDate.getHours().toString().padStart(2, &quot;0&quot;) + &quot;:&quot; + $gameDate.getMinutes().toString().padStart(2, &quot;0&quot;)&gt;&gt;
+    
+    /* 星期計算 */
+    &lt;&lt;set _weekList to [&quot;星期日&quot;, &quot;星期一&quot;, &quot;星期二&quot;, &quot;星期三&quot;, &quot;星期四&quot;, &quot;星期五&quot;, &quot;星期六&quot;]&gt;&gt;
+    &lt;&lt;set _weekStr to _weekList[$gameDate.getDay()]&gt;&gt;
+
+    /* 組合輸出 */
+    &lt;&lt;print _yearStr + &quot; &quot; + _dateStr + &quot; &quot; + _timeStr + &quot; &quot; + _weekStr&gt;&gt;
+&lt;&lt;/widget&gt;&gt;
+
+/* 時間流逝組件 */
+/* 用法：&lt;&lt;時間流逝 60&gt;&gt; 代表主角主觀經歷了 60 分鐘 */
+&lt;&lt;widget &quot;時間流逝&quot;&gt;&gt;
+    &lt;&lt;set _minutes to $args[0] || 0&gt;&gt;
+    &lt;&lt;set $gameDate.setMinutes($gameDate.getMinutes() + _minutes)&gt;&gt;
+&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="3" name="StoryInit" tags="" position="350,100" size="100,100">/* 1. 角色名稱設定 */
+&lt;&lt;set $name to &quot;&quot;&gt;&gt; /* 預設本名 */
+&lt;&lt;set $nick to &quot;&quot;&gt;&gt; /* 預設暱稱 */
 
 /* 2. 身體數值設定 */
-&lt;&lt;set $bladder to 0&gt;&gt;         /* 膀胱容量 */
-&lt;&lt;set $money to 100&gt;&gt;         /* 金錢 */
+&lt;&lt;set $bladder to 0&gt;&gt; /* 膀胱容量 */
+&lt;&lt;set $money to 100&gt;&gt; /* 金錢 */
 
 /* 3. 時間系統 */
-&lt;&lt;set $gameDate to new Date()&gt;&gt; /* 設定為當前時間 */
+/* 核心邏輯：使用 2025 年僅為了讓 8/31 對應星期日，顯示層將強制轉為「第1年」 */
+/* 格式：new Date(年, 月-1, 日, 時, 分) */
+&lt;&lt;set $gameDate to new Date(2025, 7, 31, 7, 0)&gt;&gt;
+&lt;&lt;set $startYear to 2025&gt;&gt;
 
 /* 4. AI 連結設定 */
-&lt;&lt;set $apiKey to &quot;&quot;&gt;&gt;           /* 當前使用的金鑰 */
-&lt;&lt;set $keyVault to []&gt;&gt;         /* 金鑰儲存庫 */
+&lt;&lt;set $apiKey to &quot;&quot;&gt;&gt; /* 當前使用的金鑰 */
+&lt;&lt;set $keyVault to []&gt;&gt; /* 金鑰儲存庫 */
 &lt;&lt;set $aiModel to &quot;gemini-3-flash-preview&quot;&gt;&gt; /* 預設模型 */
-&lt;&lt;set $systemPrompt to &quot;&quot;&gt;&gt;     /* 系統指令/破限詞 */</tw-passagedata><tw-passagedata pid="2" name="Start" tags="" position="225,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
+&lt;&lt;set $systemPrompt to &quot;&quot;&gt;&gt; /* 系統指令/破限詞 */
+
+/* === 系統開關與狀態欄初始值 === */
+&lt;&lt;set $enable_ai_status to false&gt;&gt;
+
+/* 數值設為 0 或 初始狀態 */
+&lt;&lt;set $sys_bladder_ml to 0&gt;&gt;
+&lt;&lt;set $sys_bladder_state to &quot;正常&quot;&gt;&gt;
+&lt;&lt;set $sys_womb_depth to 0&gt;&gt;
+&lt;&lt;set $sys_womb_state to &quot;閉合&quot;&gt;&gt;
+&lt;&lt;set $sys_anal_state to &quot;正常&quot;&gt;&gt;
+
+/* 描寫設為 空字串 */
+&lt;&lt;set $ai_desc_bladder to &quot;&quot;&gt;&gt;
+&lt;&lt;set $ai_desc_womb to &quot;&quot;&gt;&gt;
+&lt;&lt;set $ai_desc_anal to &quot;&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="4" name="Start" tags="" position="475,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
 &lt;div style=&quot;text-align: center; margin-top: 5%;&quot;&gt;
     &lt;h1&gt;✦ 初始設定 ✦&lt;/h1&gt;
     &lt;hr style=&quot;width: 50%; border-color: #ff69b4;&quot;&gt;
@@ -197,12 +465,12 @@ var saveAs=saveAs||navigator.msSaveBlob&&navigator.msSaveBlob.bind(navigator)||f
     /* 按鈕：前往下一個場景 */
     [[確認設定，從「羽之繭」甦醒 -&gt; 羽之繭_主介面]]
 
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="3" name="開門" tags="" position="350,100" size="100,100">宇宙諸界，隨心遨遊。
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="5" name="開門" tags="" position="600,100" size="100,100">宇宙諸界，隨心遨遊。
 今欲往？
 
 [[玄幻 · 世界01 -&gt; 世界01_主介面]]
 [[西幻 · 世界02 -&gt; 世界02_主介面]]
-[[關門 -&gt; 隨身空間_主介面]]</tw-passagedata><tw-passagedata pid="4" name="環形歸納區_主介面" tags="" position="475,100" size="100,100"></tw-passagedata><tw-passagedata pid="5" name="羽之繭_主介面" tags="" position="600,100" size="100,100"></tw-passagedata><tw-passagedata pid="6" name="資源培植區_主介面" tags="" position="725,100" size="100,100"></tw-passagedata><tw-passagedata pid="7" name="隨身空間_主介面" tags="" position="850,100" size="100,100">你回到隨身空間之中。
+[[關門 -&gt; 隨身空間_主介面]]</tw-passagedata><tw-passagedata pid="6" name="環形歸納區_主介面" tags="" position="725,100" size="100,100"></tw-passagedata><tw-passagedata pid="7" name="羽之繭_主介面" tags="" position="850,100" size="100,100"></tw-passagedata><tw-passagedata pid="8" name="資源培植區_主介面" tags="" position="975,100" size="100,100"></tw-passagedata><tw-passagedata pid="9" name="隨身空間_主介面" tags="" position="1100,100" size="100,100">你回到隨身空間之中。
 
 [[開門！ -&gt; 開門_主介面]]
 [[羽之繭 -&gt; 羽之繭_主介面]]

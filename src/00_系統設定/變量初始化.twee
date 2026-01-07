@@ -19,3 +19,18 @@
 <<set $keyVault to []>> /* 金鑰儲存庫 */
 <<set $aiModel to "gemini-3-flash-preview">> /* 預設模型 */
 <<set $systemPrompt to "">> /* 系統指令/破限詞 */
+
+/* === 系統開關與狀態欄初始值 === */
+<<set $enable_ai_status to false>>
+
+/* 數值設為 0 或 初始狀態 */
+<<set $sys_bladder_ml to 0>>
+<<set $sys_bladder_state to "正常">>
+<<set $sys_womb_depth to 0>>
+<<set $sys_womb_state to "閉合">>
+<<set $sys_anal_state to "正常">>
+
+/* 描寫設為 空字串 */
+<<set $ai_desc_bladder to "">>
+<<set $ai_desc_womb to "">>
+<<set $ai_desc_anal to "">>
