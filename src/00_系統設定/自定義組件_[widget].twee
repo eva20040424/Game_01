@@ -1,4 +1,4 @@
-:: 組件_時間 [widget]
+:: widget_Time [widget]
 
 /* 顯示時間組件 */
 /* 格式：第1年 8月31日 07:00 星期日 */
@@ -25,7 +25,7 @@
     <<set $gameDate.setMinutes($gameDate.getMinutes() + _minutes)>>
 <</widget>>
 
-:: 組件_AI [widget]
+:: widget_AI [widget]
 
 /* === AI 數據接收器 widget === */
 <<widget "parse_ai_data">>
