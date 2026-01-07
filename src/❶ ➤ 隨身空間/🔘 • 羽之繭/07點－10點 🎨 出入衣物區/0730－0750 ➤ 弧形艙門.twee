@@ -1,0 +1,23 @@
+:: 💠羽之繭👉弧形艙門💠 [隨身空間]
+
+<div id="cocoon-door">
+    <center><h2>🚪 空間氣密艙門</h2></center>
+    <br>
+    位於７點３０分至７點５０分方向，這是一扇與球型內壁完美貼合的**弧形氣密艙門**。
+    <br>
+    門體厚重且具有極佳的隔音效果，將羽之繭內部的私密溫馨與外部的功能性區域完全隔絕。
+    門邊的控制面板上顯示著外部空間的環境數據：
+    <br>
+    - **環形歸納區**：<span style="color: lightgreen;">運作正常</span>
+    - **資源培植區**：<span style="color: lightgreen;">環境穩定</span>
+    <br>
+    只要按下開關，伴隨著洩壓般的氣流聲，艙門將向側邊滑開，通往隨身空間的公共樞紐。
+    <br><br>
+    <div class="interaction-options">
+        - <span class="interactive-link">[[🚪 開啟艙門，前往外部 -> 💠隨身空間💠]]</span>
+    </div>
+    <br>
+    <div class="navigation-footer">
+        [[🔙 返回主介面 -> 💠羽之繭💠]]
+    </div>
+</div>
