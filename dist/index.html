@@ -260,7 +260,34 @@ details[open] summary::before {
     font-size: 1.1em;
     letter-spacing: 1px;
     box-shadow: inset 0 0 10px rgba(0, 170, 255, 0.2);
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="StoryCaption" tags="" position="100,100" size="100,100">&lt;div id=&quot;story-caption-content&quot;&gt;
+}</style><script role="script" id="twine-user-script" type="text/twine-javascript">setup.ai_prompt = `
+[SYSTEM INSTRUCTION: TWINE_STATUS_INTEGRATION]
+You are integrated with a Twine text adventure.
+At the END of every response, you MUST append a "Twine Data Block" wrapped in a unique fence.
+
+### 1. Hard Data Logic (Calculate these)
+- $sys_bladder_ml (0~2000): Urine volume. +50ml/turn.
+- $sys_bladder_state: Short status (e.g., "空虛", "正常", "脹痛", "極限").
+- $sys_womb_depth (0~20): Insertion depth cm.
+- $sys_womb_state: (e.g., "閉合", "被頂開", "紅腫").
+- $sys_anal_state: (e.g., "正常", "真空").
+
+### 2. Soft Description Logic (Write these)
+If $enable_ai_status is true, generate sensory-rich descriptions (20-30 words) for:
+- $ai_desc_bladder
+- $ai_desc_womb
+- $ai_desc_anal
+If false, keep them empty.
+
+### 3. Output Format (STRICT)
+Do NOT use markdown code blocks. Use :::TWINE_DATA as delimiter.
+Example:
+ :::TWINE_DATA
+<<set $sys_bladder_ml to 450>>
+<<set $sys_bladder_state to "脹痛">>
+<<set $ai_desc_bladder to "恥骨聯合處痠軟無力...">>
+ :::
+`;</script><tw-passagedata pid="1" name="StoryCaption" tags="" position="100,100" size="100,100">&lt;div id=&quot;story-caption-content&quot;&gt;
 
     &lt;div class=&quot;time-display-box&quot;&gt;
         ⏳ &lt;&lt;顯示時間&gt;&gt;
