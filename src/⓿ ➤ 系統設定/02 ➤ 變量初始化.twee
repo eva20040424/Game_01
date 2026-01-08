@@ -26,3 +26,10 @@
 
 /* 系統指令通常不需永久記憶 */
 <<set $systemPrompt to "">>
+
+/* 5. 角色與世界資料庫 */
+<<script>>
+    /* 如果倉庫還沒蓋好，就蓋一個空的；如果已經由其他檔案蓋好了，就保留原狀 */
+    setup.chars = setup.chars || {};
+    setup.lore = setup.lore || {};
+<</script>>

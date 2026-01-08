@@ -1,0 +1,12 @@
+:: Data_World_Cocoon [script]
+
+/* === 世界設定：隨身空間 === */
+/* 注意：世界觀是用 setup.lore */
+
+setup.lore = setup.lore || {};
+
+setup.lore["隨身空間"] = `
+【地點】：羽之繭 (Feather Cocoon)
+【描述】：一個絕對私密的亞空間，只有玩家和被允許的人能進入。
+【功能】：這裡的一切物理法則由玩家意志控制，可以隨意生成家具或道具。
+`;

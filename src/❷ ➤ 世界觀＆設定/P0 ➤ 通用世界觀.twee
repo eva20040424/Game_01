@@ -1,9 +1,0 @@
-:: Prompt_World_Common [widget]
-
-<<widget "load_world_prompt">>
-    <<set $prompt_world to "【世界觀設定】
-    這是一個充滿奇幻色彩的世界，人類與亞人共存。
-    貨幣單位：金幣。
-    目前地點：隨身空間『羽之繭』內部。
-    ">>
-<</widget>>

@@ -1,23 +1,19 @@
 :: Action_Handler
 
-/* 狀態顯示區 */
 <div id="ai-status" style="text-align:center; padding: 20px; color: cyan; border: 1px dashed #444; margin: 10px;">
     正在呼叫 Google 大腦... <br>
     <span class="spinner">💫</span> 使用模型：<<print $aiModel>>
 </div>
 
-/* 內容顯示區：AI 的故事會出現在這裡 */
 <div id="ai-content"></div>
-
-/* 錯誤日誌區 */
 <div id="ai-debug" style="display:none; color: red; background: #220000; padding: 10px; border: 1px solid red; margin-top: 20px;"></div>
 
-/* --- 【新增】回程閘門 --- */
-/* 如果發現有 $returnPassage (回程票) 這個變數，就顯示離開按鈕 */
+/* --- 回程閘門 --- */
 <<if $returnPassage>>
     <div style="margin-top: 30px; text-align: center; border-top: 1px solid #555; padding-top: 10px;">
-        /* 點擊後：1.回到原本的房間 2.把票銷毀(設為 null) */
         <<link "🚪 結束互動並返回">>
+            /* 離開時，清空當前角色卡，避免帶到下一個場景 */
+            <<set $active_char_id to null>>
             <<goto $returnPassage>>
             <<set $returnPassage to null>>
         <</link>>
@@ -33,16 +29,37 @@
     } else {
         var url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
 
+        /* === 1. 組合提示詞積木 === */
+        
+        // A. 系統基礎指令
         var basePrompt = setup.ai_prompt; 
+        
+        // B. 讀取當前啟用的「世界書」 (預設使用 '通用規則'，除非有指定)
+        var activeWorldId = State.variables.active_world_id || "通用規則";
+        var worldInfo = setup.lore[activeWorldId] ? "[WORLD SETTING]:\n" + setup.lore[activeWorldId] : "";
+
+        // C. 讀取當前啟用的「角色卡」
+        var activeCharId = State.variables.active_char_id;
+        var charInfo = "";
+        if (activeCharId && setup.chars[activeCharId]) {
+            charInfo = "[CHARACTER CARD]:\n" + setup.chars[activeCharId];
+        }
+
+        // D. 其他動態資訊
         var userSystemSetting = State.variables.systemPrompt || "";
         var lastContext = State.variables.ai_last_narrative || "（故事開始）";
         var playerAction = State.variables.player_act || "玩家進入了場景";
         
-        var finalPrompt = basePrompt + "\n" + 
+        // E. 最終合體！
+        // 順序：系統指令 -> 世界觀 -> 角色卡 -> 上下文 -> 玩家動作
+        var finalPrompt = basePrompt + "\n\n" + 
+                          worldInfo + "\n\n" + 
+                          charInfo + "\n\n" + 
                           "[User Extra Settings]: " + userSystemSetting + "\n\n" + 
                           "【Current Story Context】: " + lastContext + "\n\n" + 
                           "【Player Current Action】: " + playerAction;
 
+        /* === 2. 發送請求 === */
         fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
