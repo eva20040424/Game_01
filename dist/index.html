@@ -299,25 +299,19 @@ At the very END, append the data block.
 &lt;&lt;set $gameDate to new Date(&quot;2025-08-31T07:00:00&quot;)&gt;&gt;
 
 /* 4. AI 連結設定 */
-&lt;&lt;set $apiKey to &quot;&quot;&gt;&gt; /* 當前使用的金鑰 */
-&lt;&lt;set $keyVault to []&gt;&gt; /* 金鑰儲存庫 */
-&lt;&lt;set $aiModel to &quot;gemini-3-flash-preview&quot;&gt;&gt; /* 預設模型 */
-&lt;&lt;set $systemPrompt to &quot;&quot;&gt;&gt; /* 系統指令/破限詞 */
+/* 使用 recall(&quot;變數名稱&quot;, 預設值) 從瀏覽器記憶中讀取資料 */
 
-/* === 系統開關與狀態欄初始值 === */
-&lt;&lt;set $enable_ai_status to false&gt;&gt;
+/* 嘗試讀取 apiKey，如果沒讀到，就設為空字串 &quot;&quot; */
+&lt;&lt;set $apiKey to recall(&quot;apiKey&quot;, &quot;&quot;)&gt;&gt;
 
-/* 數值設為 0 或 初始狀態 */
-&lt;&lt;set $sys_bladder_ml to 0&gt;&gt;
-&lt;&lt;set $sys_bladder_state to &quot;正常&quot;&gt;&gt;
-&lt;&lt;set $sys_womb_depth to 0&gt;&gt;
-&lt;&lt;set $sys_womb_state to &quot;閉合&quot;&gt;&gt;
-&lt;&lt;set $sys_anal_state to &quot;正常&quot;&gt;&gt;
+/* 嘗試讀取金鑰庫，如果沒讀到，就設為空陣列 [] */
+&lt;&lt;set $keyVault to recall(&quot;keyVault&quot;, [])&gt;&gt;
 
-/* 描寫設為 空字串 */
-&lt;&lt;set $ai_desc_bladder to &quot;&quot;&gt;&gt;
-&lt;&lt;set $ai_desc_womb to &quot;&quot;&gt;&gt;
-&lt;&lt;set $ai_desc_anal to &quot;&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="widget_Time" tags="widget" position="225,100" size="100,100">/* 顯示時間組件 */
+/* 嘗試讀取模型設定，如果沒讀到，就設為預設模型 */
+&lt;&lt;set $aiModel to recall(&quot;aiModel&quot;, &quot;gemini-3-flash-preview&quot;)&gt;&gt;
+
+/* 系統指令通常不需永久記憶 */
+&lt;&lt;set $systemPrompt to &quot;&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="widget_Time" tags="widget" position="225,100" size="100,100">/* 顯示時間組件 */
 &lt;&lt;widget &quot;Time_Display&quot;&gt;&gt;
     &lt;&lt;set _yearStr to &quot;第&quot; + ($gameDate.getFullYear() - $startYear + 1) + &quot;年&quot;&gt;&gt;
     &lt;&lt;set _dateStr to ($gameDate.getMonth() + 1) + &quot;月&quot; + $gameDate.getDate() + &quot;日&quot;&gt;&gt;
@@ -509,20 +503,27 @@ At the very END, append the data block.
 /* 錯誤日誌區 */
 &lt;div id=&quot;ai-debug&quot; style=&quot;display:none; color: red; background: #220000; padding: 10px; border: 1px solid red; margin-top: 20px;&quot;&gt;&lt;/div&gt;
 
+/* --- 【新增】回程閘門 --- */
+/* 如果發現有 $returnPassage (回程票) 這個變數，就顯示離開按鈕 */
+&lt;&lt;if $returnPassage&gt;&gt;
+    &lt;div style=&quot;margin-top: 30px; text-align: center; border-top: 1px solid #555; padding-top: 10px;&quot;&gt;
+        /* 點擊後：1.回到原本的房間 2.把票銷毀(設為 null) */
+        &lt;&lt;link &quot;🚪 結束互動並返回&quot;&gt;&gt;
+            &lt;&lt;goto $returnPassage&gt;&gt;
+            &lt;&lt;set $returnPassage to null&gt;&gt;
+        &lt;&lt;/link&gt;&gt;
+    &lt;/div&gt;
+&lt;&lt;/if&gt;&gt;
+
 &lt;&lt;script&gt;&gt;
-    // 1. 設定參數
     var apiKey = State.variables.apiKey;
     var model = State.variables.aiModel || &quot;gemini-3-flash-preview&quot;;
 
-    // 檢查 Key
     if (!apiKey || apiKey === &quot;&quot;) {
         $(&quot;#ai-status&quot;).html(&quot;❌ 錯誤：尚未輸入 API Key！請返回【初始設定】頁面填寫。&quot;);
     } else {
-
-        // 2. 準備網址
         var url = &quot;https://generativelanguage.googleapis.com/v1beta/models/&quot; + model + &quot;:generateContent?key=&quot; + apiKey;
 
-        // 3. 準備提示詞
         var basePrompt = setup.ai_prompt; 
         var userSystemSetting = State.variables.systemPrompt || &quot;&quot;;
         var lastContext = State.variables.ai_last_narrative || &quot;（故事開始）&quot;;
@@ -533,7 +534,6 @@ At the very END, append the data block.
                           &quot;【Current Story Context】: &quot; + lastContext + &quot;\n\n&quot; + 
                           &quot;【Player Current Action】: &quot; + playerAction;
 
-        // 4. 發送請求
         fetch(url, {
             method: &quot;POST&quot;,
             headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
@@ -546,29 +546,24 @@ At the very END, append the data block.
             return response.json();
         })
         .then(data =&gt; {
-            // 5. 接收資料處理
             try {
                 if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-                    throw new Error(&quot;AI 拒絕生成內容（可能是安全過濾或無內容）。&quot;);
+                    throw new Error(&quot;AI 拒絕生成內容。&quot;);
                 }
 
                 var ai_text = data.candidates[0].content.parts[0].text;
-                
-                // 存入臨時變數
                 State.variables.temp_ai_response = ai_text;
 
-                // 更新狀態
                 $(&quot;#ai-status&quot;).html(&quot;✅ 接收成功，正在渲染...&quot;);
                 $(&quot;#ai-status&quot;).fadeOut(500); 
 
-                // 【關鍵修復點】：使用 document.getElementById 抓取真正的網頁元素
                 var contentBox = document.getElementById(&quot;ai-content&quot;);
                 new Wikifier(contentBox, &quot;&lt;&lt;parse_ai_data $temp_ai_response&gt;&gt;&quot;);
                 
             } catch (e) {
                 console.error(e);
                 $(&quot;#ai-status&quot;).html(&quot;⚠️ 解析錯誤&quot;);
-                $(&quot;#ai-debug&quot;).show().html(&quot;&lt;b&gt;程式運作錯誤：&lt;/b&gt;&lt;br&gt;&quot; + e.message + &quot;&lt;br&gt;&lt;br&gt;&lt;b&gt;原始回傳資料：&lt;/b&gt;&lt;br&gt;&quot; + JSON.stringify(data));
+                $(&quot;#ai-debug&quot;).show().html(&quot;&lt;b&gt;程式運作錯誤：&lt;/b&gt;&lt;br&gt;&quot; + e.message);
             }
         })
         .catch(error =&gt; {
@@ -616,44 +611,39 @@ At the very END, append the data block.
             &lt;span style=&quot;font-size:0.8em; color:#aaa;&quot;&gt;－ 從儲存庫切換：&lt;/span&gt;&lt;br&gt;
             &lt;&lt;listbox &quot;$apiKey&quot; autoselect&gt;&gt;
                 &lt;&lt;optionsfrom $keyVault&gt;&gt;
-            &lt;&lt;/listbox&gt;&gt;&lt;br&gt;
+            &lt;&lt;/listbox&gt;&gt;
+            
+            /* 【修正點 1】使用 memorize 函數來記憶 */
+            &lt;&lt;button &quot;✅ 確認切換&quot;&gt;&gt;
+                &lt;&lt;run memorize(&quot;apiKey&quot;, $apiKey)&gt;&gt;
+                &lt;&lt;run memorize(&quot;aiModel&quot;, $aiModel)&gt;&gt;
+                &lt;&lt;run UI.alert(&quot;已切換並記憶金鑰！&quot;)&gt;&gt;
+            &lt;&lt;/button&gt;&gt;
+            &lt;br&gt;
         &lt;&lt;/if&gt;&gt;
         
         /* 2. 新增金鑰輸入框 */
         &lt;span style=&quot;font-size:0.8em; color:#aaa;&quot;&gt;－ 或輸入新金鑰：&lt;/span&gt;&lt;br&gt;
         &lt;&lt;textbox &quot;_newKey&quot; &quot;&quot;&gt;&gt; 
-        &lt;&lt;button &quot;💾 存入並使用&quot;&gt;&gt;
+        
+        /* 【修正點 2】使用 memorize 函數來永久記憶 */
+        &lt;&lt;button &quot;💾 存入並永久記憶&quot;&gt;&gt;
             &lt;&lt;if _newKey neq &quot;&quot;&gt;&gt;
+                /* 1. 更新金鑰庫 */
                 &lt;&lt;run $keyVault.pushUnique(_newKey)&gt;&gt;
+                
+                /* 2. 設定當前金鑰 */
                 &lt;&lt;set $apiKey to _newKey&gt;&gt;
-                &lt;&lt;goto &quot;Start&quot;&gt;&gt; /* 刷新頁面以更新列表 */
+                
+                /* 3. 將資料寫入瀏覽器硬碟 (Key, Value) */
+                &lt;&lt;run memorize(&quot;apiKey&quot;, $apiKey)&gt;&gt;
+                &lt;&lt;run memorize(&quot;keyVault&quot;, $keyVault)&gt;&gt;
+                &lt;&lt;run memorize(&quot;aiModel&quot;, $aiModel)&gt;&gt;
+
+                &lt;&lt;goto &quot;Start&quot;&gt;&gt; /* 刷新頁面 */
             &lt;&lt;/if&gt;&gt;
         &lt;&lt;/button&gt;&gt;
         &lt;/p&gt;
-
-        /* 系統指令/破限詞輸入 (可調整大小) */
-        &lt;p style=&quot;font-size: 0.9em;&quot;&gt;&lt;b&gt;📝 系統指令 / AI 身分 / 破限詞：&lt;/b&gt;&lt;br&gt;
-        &lt;&lt;textarea &quot;$systemPrompt&quot; &quot;&quot;&gt;&gt;&lt;/p&gt;
-        /* CSS 修正：強制讓 textarea 可以調整大小並符合容器寬度 */
-        &lt;script&gt;
-            $(document).one(&quot;:passagerender&quot;, function (ev) {
-                $(ev.content).find(&quot;textarea&quot;)
-                    .css({
-                        &quot;width&quot;: &quot;95%&quot;,
-                        &quot;min-height&quot;: &quot;80px&quot;,
-                        &quot;resize&quot;: &quot;vertical&quot;, 
-                        &quot;background-color&quot;: &quot;#222&quot;,
-                        &quot;color&quot;: &quot;#eee&quot;,
-                        &quot;border&quot;: &quot;1px solid #555&quot;
-                    });
-            });
-        &lt;/script&gt;
-
-        &lt;hr style=&quot;border-style: dashed; opacity: 0.3;&quot;&gt;
-
-    &lt;/div&gt;
-
-    &lt;br&gt;&lt;br&gt;&lt;br&gt;
     
     /* 按鈕：前往下一個場景 */
 歡迎來到測試房。
@@ -747,7 +737,11 @@ At the very END, append the data block.
 ——當然，那些被鎖死的貞操帶與強制插入體內的拉珠是無法取下的。
 而對你來說，累積「戰利品」，亦是比了無痕跡更滿足的選擇。
 
-[[淋浴自慰 -&gt; 💠淋浴間👉自慰事件💠]]
+/* 這行代碼的意思是： */
+/* 1. 玩家動作是 &quot;開始淋浴自慰...&quot; */
+/* 2. 回程票($returnPassage) 設為 &quot;0200－0300 ➤ 多功能調教 • 淋浴間&quot; (就是當前這個檔案的標題) */
+/* 3. 跳轉到 &quot;Action_Handler&quot; 開始 AI 運算 */
+[[🚿 開始淋浴自慰 (AI生成)-&gt;Action_Handler][$player_act = &quot;開始淋浴自慰，並專注於描寫水流與手指的觸感&quot;, $returnPassage = &quot;0200－0300 ➤ 多功能調教 • 淋浴間&quot;]]
 
 
 [[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="15" name="💠羽之繭👉衛浴艙💠" tags="隨身空間" position="600,225" size="100,100">&lt;center&gt;&lt;h3&gt;🌊 衛浴清潔區&lt;/h3&gt;&lt;/center&gt;

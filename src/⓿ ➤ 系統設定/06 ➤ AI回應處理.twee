@@ -12,20 +12,27 @@
 /* 錯誤日誌區 */
 <div id="ai-debug" style="display:none; color: red; background: #220000; padding: 10px; border: 1px solid red; margin-top: 20px;"></div>
 
+/* --- 【新增】回程閘門 --- */
+/* 如果發現有 $returnPassage (回程票) 這個變數，就顯示離開按鈕 */
+<<if $returnPassage>>
+    <div style="margin-top: 30px; text-align: center; border-top: 1px solid #555; padding-top: 10px;">
+        /* 點擊後：1.回到原本的房間 2.把票銷毀(設為 null) */
+        <<link "🚪 結束互動並返回">>
+            <<goto $returnPassage>>
+            <<set $returnPassage to null>>
+        <</link>>
+    </div>
+<</if>>
+
 <<script>>
-    // 1. 設定參數
     var apiKey = State.variables.apiKey;
     var model = State.variables.aiModel || "gemini-3-flash-preview";
 
-    // 檢查 Key
     if (!apiKey || apiKey === "") {
         $("#ai-status").html("❌ 錯誤：尚未輸入 API Key！請返回【初始設定】頁面填寫。");
     } else {
-
-        // 2. 準備網址
         var url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
 
-        // 3. 準備提示詞
         var basePrompt = setup.ai_prompt; 
         var userSystemSetting = State.variables.systemPrompt || "";
         var lastContext = State.variables.ai_last_narrative || "（故事開始）";
@@ -36,7 +43,6 @@
                           "【Current Story Context】: " + lastContext + "\n\n" + 
                           "【Player Current Action】: " + playerAction;
 
-        // 4. 發送請求
         fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -49,29 +55,24 @@
             return response.json();
         })
         .then(data => {
-            // 5. 接收資料處理
             try {
                 if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-                    throw new Error("AI 拒絕生成內容（可能是安全過濾或無內容）。");
+                    throw new Error("AI 拒絕生成內容。");
                 }
 
                 var ai_text = data.candidates[0].content.parts[0].text;
-                
-                // 存入臨時變數
                 State.variables.temp_ai_response = ai_text;
 
-                // 更新狀態
                 $("#ai-status").html("✅ 接收成功，正在渲染...");
                 $("#ai-status").fadeOut(500); 
 
-                // 【關鍵修復點】：使用 document.getElementById 抓取真正的網頁元素
                 var contentBox = document.getElementById("ai-content");
                 new Wikifier(contentBox, "<<parse_ai_data $temp_ai_response>>");
                 
             } catch (e) {
                 console.error(e);
                 $("#ai-status").html("⚠️ 解析錯誤");
-                $("#ai-debug").show().html("<b>程式運作錯誤：</b><br>" + e.message + "<br><br><b>原始回傳資料：</b><br>" + JSON.stringify(data));
+                $("#ai-debug").show().html("<b>程式運作錯誤：</b><br>" + e.message);
             }
         })
         .catch(error => {

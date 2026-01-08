@@ -38,44 +38,39 @@
             <span style="font-size:0.8em; color:#aaa;">－ 從儲存庫切換：</span><br>
             <<listbox "$apiKey" autoselect>>
                 <<optionsfrom $keyVault>>
-            <</listbox>><br>
+            <</listbox>>
+            
+            /* 【修正點 1】使用 memorize 函數來記憶 */
+            <<button "✅ 確認切換">>
+                <<run memorize("apiKey", $apiKey)>>
+                <<run memorize("aiModel", $aiModel)>>
+                <<run UI.alert("已切換並記憶金鑰！")>>
+            <</button>>
+            <br>
         <</if>>
         
         /* 2. 新增金鑰輸入框 */
         <span style="font-size:0.8em; color:#aaa;">－ 或輸入新金鑰：</span><br>
         <<textbox "_newKey" "">> 
-        <<button "💾 存入並使用">>
+        
+        /* 【修正點 2】使用 memorize 函數來永久記憶 */
+        <<button "💾 存入並永久記憶">>
             <<if _newKey neq "">>
+                /* 1. 更新金鑰庫 */
                 <<run $keyVault.pushUnique(_newKey)>>
+                
+                /* 2. 設定當前金鑰 */
                 <<set $apiKey to _newKey>>
-                <<goto "Start">> /* 刷新頁面以更新列表 */
+                
+                /* 3. 將資料寫入瀏覽器硬碟 (Key, Value) */
+                <<run memorize("apiKey", $apiKey)>>
+                <<run memorize("keyVault", $keyVault)>>
+                <<run memorize("aiModel", $aiModel)>>
+
+                <<goto "Start">> /* 刷新頁面 */
             <</if>>
         <</button>>
         </p>
-
-        /* 系統指令/破限詞輸入 (可調整大小) */
-        <p style="font-size: 0.9em;"><b>📝 系統指令 / AI 身分 / 破限詞：</b><br>
-        <<textarea "$systemPrompt" "">></p>
-        /* CSS 修正：強制讓 textarea 可以調整大小並符合容器寬度 */
-        <script>
-            $(document).one(":passagerender", function (ev) {
-                $(ev.content).find("textarea")
-                    .css({
-                        "width": "95%",
-                        "min-height": "80px",
-                        "resize": "vertical", 
-                        "background-color": "#222",
-                        "color": "#eee",
-                        "border": "1px solid #555"
-                    });
-            });
-        </script>
-
-        <hr style="border-style: dashed; opacity: 0.3;">
-
-    </div>
-
-    <br><br><br>
     
     /* 按鈕：前往下一個場景 */
 歡迎來到測試房。

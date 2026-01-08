@@ -13,22 +13,16 @@
 <<set $gameDate to new Date("2025-08-31T07:00:00")>>
 
 /* 4. AI 連結設定 */
-<<set $apiKey to "">> /* 當前使用的金鑰 */
-<<set $keyVault to []>> /* 金鑰儲存庫 */
-<<set $aiModel to "gemini-3-flash-preview">> /* 預設模型 */
-<<set $systemPrompt to "">> /* 系統指令/破限詞 */
+/* 使用 recall("變數名稱", 預設值) 從瀏覽器記憶中讀取資料 */
 
-/* === 系統開關與狀態欄初始值 === */
-<<set $enable_ai_status to false>>
+/* 嘗試讀取 apiKey，如果沒讀到，就設為空字串 "" */
+<<set $apiKey to recall("apiKey", "")>>
 
-/* 數值設為 0 或 初始狀態 */
-<<set $sys_bladder_ml to 0>>
-<<set $sys_bladder_state to "正常">>
-<<set $sys_womb_depth to 0>>
-<<set $sys_womb_state to "閉合">>
-<<set $sys_anal_state to "正常">>
+/* 嘗試讀取金鑰庫，如果沒讀到，就設為空陣列 [] */
+<<set $keyVault to recall("keyVault", [])>>
 
-/* 描寫設為 空字串 */
-<<set $ai_desc_bladder to "">>
-<<set $ai_desc_womb to "">>
-<<set $ai_desc_anal to "">>
+/* 嘗試讀取模型設定，如果沒讀到，就設為預設模型 */
+<<set $aiModel to recall("aiModel", "gemini-3-flash-preview")>>
+
+/* 系統指令通常不需永久記憶 */
+<<set $systemPrompt to "">>
