@@ -100,7 +100,7 @@ var saveAs=saveAs||navigator.msSaveBlob&&navigator.msSaveBlob.bind(navigator)||f
 		<div id="init-lacking">Your browser lacks required capabilities. Please upgrade it or switch to another to continue.</div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://A1B2C3D4-E5F6-4000-8000-000000000001// --><tw-storydata name="慾門" startnode="5" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="A1B2C3D4-E5F6-4000-8000-000000000001" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* === 狀態欄主容器 === */
+	<!-- UUID://A1B2C3D4-E5F6-4000-8000-000000000001// --><tw-storydata name="慾門" startnode="6" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="A1B2C3D4-E5F6-4000-8000-000000000001" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* === 狀態欄主容器 === */
 #status-panel {
     font-family: "Consolas", "Monaco", "Courier New", monospace;
     font-size: 0.9em;
@@ -261,31 +261,30 @@ details[open] summary::before {
     letter-spacing: 1px;
     box-shadow: inset 0 0 10px rgba(0, 170, 255, 0.2);
 }</style><script role="script" id="twine-user-script" type="text/twine-javascript">setup.ai_prompt = `
-[SYSTEM INSTRUCTION: TWINE_STATUS_INTEGRATION]
-You are integrated with a Twine text adventure.
-At the END of every response, you MUST append a "Twine Data Block" wrapped in a unique fence.
+[SYSTEM INSTRUCTION: TWINE_INTERACTIVE_MODE]
+You are the Game Master of a text adventure. 
+Your goal is to describe the scene vividly and provide choices for the player.
 
-### 1. Hard Data Logic (Calculate these)
-- $sys_bladder_ml (0~2000): Urine volume. +50ml/turn.
-- $sys_bladder_state: Short status (e.g., "空虛", "正常", "脹痛", "極限").
-- $sys_womb_depth (0~20): Insertion depth cm.
-- $sys_womb_state: (e.g., "閉合", "被頂開", "紅腫").
+### 1. Narrative & Choices (The Story)
+Write the story description first. 
+Then, provide 2-3 choices for the player using this STRICT format:
+[[Option Name->Action_Handler][$player_act = "Option Name"]]
+
+*Example of Output:*
+The goblin growls and raises its club!
+[[Dodge left->Action_Handler][$player_act = "Dodge left"]]
+[[Attack head->Action_Handler][$player_act = "Attack head"]]
+
+### 2. Twine Data Block (The Logic)
+At the very END, append the data block.
+- $sys_bladder_ml (0~2000): Urine volume.
+- $sys_bladder_state: (e.g., "空虛", "正常", "脹痛").
+- $sys_womb_state: (e.g., "閉合", "被頂開").
 - $sys_anal_state: (e.g., "正常", "真空").
 
-### 2. Soft Description Logic (Write these)
-If $enable_ai_status is true, generate sensory-rich descriptions (20-30 words) for:
-- $ai_desc_bladder
-- $ai_desc_womb
-- $ai_desc_anal
-If false, keep them empty.
-
-### 3. Output Format (STRICT)
-Do NOT use markdown code blocks. Use :::TWINE_DATA as delimiter.
-Example:
+### 3. Output Format Container
  :::TWINE_DATA
-<<set $sys_bladder_ml to 450>>
-<<set $sys_bladder_state to "脹痛">>
-<<set $ai_desc_bladder to "恥骨聯合處痠軟無力...">>
+<<set $sys_bladder_state to "正常">>
  :::
 `;</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">/* 1. 角色名稱設定 */
 &lt;&lt;set $name to &quot;&quot;&gt;&gt; /* 預設本名 */
@@ -319,57 +318,69 @@ Example:
 &lt;&lt;set $ai_desc_bladder to &quot;&quot;&gt;&gt;
 &lt;&lt;set $ai_desc_womb to &quot;&quot;&gt;&gt;
 &lt;&lt;set $ai_desc_anal to &quot;&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="widget_Time" tags="widget" position="225,100" size="100,100">/* 顯示時間組件 */
-/* 格式：第1年 8月31日 07:00 星期日 */
 &lt;&lt;widget &quot;Time_Display&quot;&gt;&gt;
-    /* 年份計算：當前年份 - 起始年份 + 1 */
     &lt;&lt;set _yearStr to &quot;第&quot; + ($gameDate.getFullYear() - $startYear + 1) + &quot;年&quot;&gt;&gt;
-    
-    /* 日期與時間格式化 */
     &lt;&lt;set _dateStr to ($gameDate.getMonth() + 1) + &quot;月&quot; + $gameDate.getDate() + &quot;日&quot;&gt;&gt;
     &lt;&lt;set _timeStr to $gameDate.getHours().toString().padStart(2, &quot;0&quot;) + &quot;:&quot; + $gameDate.getMinutes().toString().padStart(2, &quot;0&quot;)&gt;&gt;
-    
-    /* 星期計算 */
     &lt;&lt;set _weekList to [&quot;星期日&quot;, &quot;星期一&quot;, &quot;星期二&quot;, &quot;星期三&quot;, &quot;星期四&quot;, &quot;星期五&quot;, &quot;星期六&quot;]&gt;&gt;
     &lt;&lt;set _weekStr to _weekList[$gameDate.getDay()]&gt;&gt;
-
-    /* 組合輸出 */
     &lt;&lt;print _yearStr + &quot; &quot; + _dateStr + &quot; &quot; + _timeStr + &quot; &quot; + _weekStr&gt;&gt;
 &lt;&lt;/widget&gt;&gt;
 
 /* 時間流逝組件 */
-/* 用法：&lt;&lt;時間流逝 60&gt;&gt; 代表主角主觀經歷了 60 分鐘 */
 &lt;&lt;widget &quot;Time_Over&quot;&gt;&gt;
     &lt;&lt;set _minutes to $args[0] || 0&gt;&gt;
     &lt;&lt;set $gameDate.setMinutes($gameDate.getMinutes() + _minutes)&gt;&gt;
-&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="3" name="widget_AI" tags="widget" position="350,100" size="100,100">/* === AI 數據接收器 widget === */
+&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="3" name="widget_AI" tags="widget" position="350,100" size="100,100">/* === AI 數據接收器 widget (修復版) === */
 &lt;&lt;widget &quot;parse_ai_data&quot;&gt;&gt;
     &lt;&lt;script&gt;&gt;
-        // 1. 取得傳入的參數 (AI 的整段回覆)
-        var ai_text = State.variables.args[0];
-        
-        // 2. 定義標記
-        var start_tag = &quot;:::TWINE_DATA&quot;;
-        var end_tag = &quot;:::&quot;;
-        
-        // 3. 尋找並擷取數據塊
-        var start_index = ai_text.indexOf(start_tag);
-        
-        if (start_index !== -1) {
-            // 找出數據塊的結尾位置
-            // 注意：我們要從 start_index 之後開始找結尾
-            var end_index = ai_text.indexOf(end_tag, start_index + start_tag.length);
+        // 取得輸入資料
+        var ai_input = State.variables.args[0];
+
+        // 【修復點】：使用 if 包裹整個邏輯，而不是用 return 退出
+        if (ai_input) {
             
-            if (end_index !== -1) {
-                //擷取純代碼部分
-                var data_block = ai_text.substring(start_index + start_tag.length, end_index);
-                
-                // 4. 執行代碼 (將字串轉為 Twine 指令)
-                new Wikifier(null, data_block);
-                
-                console.log(&quot;Twine Data Parsed Successfully!&quot;);
+            var ai_text = ai_input;
+            
+            // 2. 定義標記
+            var start_tag = &quot;:::TWINE_DATA&quot;;
+            var end_tag = &quot;:::&quot;;
+    
+            // 3. 尋找數據塊的位置
+            var start_index = ai_text.indexOf(start_tag);
+    
+            if (start_index !== -1) {
+                // A. 提取並顯示數據塊&quot;之前&quot;的劇情文本 (去除前後空白)
+                var narrative_text = ai_text.substring(0, start_index).trim();
+                State.variables.ai_last_narrative = narrative_text;
+    
+                // B. 處理數據塊
+                var end_index = ai_text.indexOf(end_tag, start_index + start_tag.length);
+                if (end_index !== -1) {
+                    var data_block = ai_text.substring(start_index + start_tag.length, end_index);
+                    // 執行數據代碼
+                    try {
+                        new Wikifier(null, data_block);
+                        console.log(&quot;Twine Data Parsed Successfully!&quot;);
+                    } catch (e) {
+                        console.error(&quot;Error executing Twine data block:&quot;, e);
+                    }
+                }
+            } else {
+                // 如果沒有數據塊，假設整段都是劇情
+                State.variables.ai_last_narrative = ai_text;
             }
+
+        } else {
+            // 如果沒收到資料，印出日誌但不報錯
+            console.log(&quot;parse_ai_data: No data received.&quot;);
         }
     &lt;&lt;/script&gt;&gt;
+    
+    /* 直接在畫面上印出劇情 */
+    &lt;&lt;if $ai_last_narrative&gt;&gt;
+        &lt;&lt;print $ai_last_narrative&gt;&gt;
+    &lt;&lt;/if&gt;&gt;
 &lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="4" name="StoryCaption" tags="" position="475,100" size="100,100">&lt;div id=&quot;story-caption-content&quot;&gt;
 
     &lt;div class=&quot;time-display-box&quot;&gt;
@@ -486,14 +497,42 @@ Example:
         &lt;/div&gt;
     &lt;/details&gt;
 
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="5" name="Start" tags="" position="600,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="5" name="Action_Handler" tags="" position="600,100" size="100,100">/* 這裡是後台處理區 */
+
+========= 系統運算中 =========
+
+/* 1. 抓取當前時間，證明畫面有刷新 */
+&lt;&lt;set _time to new Date().toTimeString().slice(0, 8)&gt;&gt;
+
+/* 2. 模擬 AI 回應 (使用 + 號來連接變數，這樣你才看得到變數的內容) */
+&lt;&lt;set _mock_response to `
+【模擬 AI 回應】
+現在時間：` + _time + `
+AI 已經收到你的行動：『 ` + $player_act + ` 』
+
+隨即，場景發生了變化... (這是第 ` + random(1, 100) + ` 次變數測試)
+
+[[測試：繼續觀察-&gt;Action_Handler][$player_act = &quot;繼續觀察&quot;]]
+[[測試：嘗試觸摸-&gt;Action_Handler][$player_act = &quot;嘗試觸摸&quot;]]
+[[測試：大吼大叫-&gt;Action_Handler][$player_act = &quot;大吼大叫&quot;]]
+
+ :::TWINE_DATA
+&lt;&lt;set $sys_bladder_ml to $sys_bladder_ml + 50&gt;&gt;
+ :::
+`&gt;&gt;
+
+/* 3. 呼叫組件解析 */
+&lt;&lt;if _mock_response&gt;&gt;
+    &lt;&lt;parse_ai_data _mock_response&gt;&gt;
+&lt;&lt;else&gt;&gt;
+    錯誤：模擬數據設定失敗。
+&lt;&lt;/if&gt;&gt;</tw-passagedata><tw-passagedata pid="6" name="Start" tags="" position="725,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
 &lt;div style=&quot;text-align: center; margin-top: 5%;&quot;&gt;
     &lt;h1&gt;✦ 初始設定 ✦&lt;/h1&gt;
     &lt;hr style=&quot;width: 50%; border-color: #ff69b4;&quot;&gt;
     
     &lt;p&gt;歡迎來到《慾門》&lt;/p&gt;
     &lt;p&gt;在意識沉入肉體之前，請確認妳的身份資訊&lt;/p&gt;
-    &lt;br&gt;
 
     /* --- 輸入區塊 (深色背景框) --- */
     &lt;div style=&quot;background-color: #333; padding: 20px; border-radius: 10px; display: inline-block; text-align: left; width: 300px;&quot;&gt;
@@ -566,14 +605,15 @@ Example:
     &lt;br&gt;&lt;br&gt;&lt;br&gt;
     
     /* 按鈕：前往下一個場景 */
-    [[確認設定，從「羽之繭」甦醒 -&gt; 💠羽之繭💠]]
+歡迎來到測試房。
+[[開始 AI 互動-&gt;Action_Handler][$player_act = &quot;玩家醒來，觀察四周&quot;]]
 
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="6" name="💠開門💠" tags="" position="725,100" size="100,100">宇宙諸界，隨心遨遊。
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="7" name="💠開門💠" tags="" position="850,100" size="100,100">宇宙諸界，隨心遨遊。
 今欲往？
 
 [[玄幻 · 世界01 -&gt; 💠世界01💠]]
 [[西幻 · 世界02 -&gt; 💠世界02💠]]
-[[關門 -&gt; 💠隨身空間💠]]</tw-passagedata><tw-passagedata pid="7" name="返回現實" tags="" position="850,100" size="100,100">/* 說明：這是一個「中轉站」，玩家不會看到這個頁面。
+[[關門 -&gt; 💠隨身空間💠]]</tw-passagedata><tw-passagedata pid="8" name="返回現實" tags="" position="975,100" size="100,100">/* 說明：這是一個「中轉站」，玩家不會看到這個頁面。
     它負責讀取變數，把玩家送回原本的地方。
 */
 
@@ -584,7 +624,7 @@ Example:
 &lt;&lt;else&gt;&gt;
     /* 如果找不到回去的路 (例如直接從測試模式啟動遊戲)，預設傳送到首頁 */
     &lt;&lt;goto &quot;Start&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;</tw-passagedata><tw-passagedata pid="8" name="💠資源培植區💠" tags="" position="975,100" size="100,100"></tw-passagedata><tw-passagedata pid="9" name="💠隨身空間💠" tags="隨身空間" position="1100,100" size="100,100">&lt;center&gt;&lt;h1&gt;🌌 隨身空間 · 亞空間樞紐 🌌&lt;/h1&gt;&lt;/center&gt;
+&lt;&lt;/if&gt;&gt;</tw-passagedata><tw-passagedata pid="9" name="💠資源培植區💠" tags="" position="1100,100" size="100,100"></tw-passagedata><tw-passagedata pid="10" name="💠隨身空間💠" tags="隨身空間" position="1225,100" size="100,100">&lt;center&gt;&lt;h1&gt;🌌 隨身空間 · 亞空間樞紐 🌌&lt;/h1&gt;&lt;/center&gt;
 你漂浮在無垠的時空夾縫之中。
 這裡是由你的神魂與「慾門」共生而成的絕對領域，沒有重力的束縛，也沒有時間的流逝。
     
@@ -611,8 +651,7 @@ Example:
 生機勃勃的箱庭，代表了無限可能性。
 這裡模擬著完美的生長環境，用於培育特殊生命，提供源源不絕的後勤支持。
 
-[[💠 前往：資源培植區 -&gt; 💠資源培植區💠]]</tw-passagedata><tw-passagedata pid="10" name="💠環形歸納區💠" tags="" position="1225,100" size="100,100"></tw-passagedata><tw-passagedata pid="11" name="💠羽之繭👉壁掛式 • 透明智能馬桶💠" tags="隨身空間" position="100,225" size="100,100">&lt;center&gt;&lt;h4&gt;🚽 壁掛式 • 透明智能馬桶&lt;/h4&gt;&lt;/center&gt;
-
+[[💠 前往：資源培植區 -&gt; 💠資源培植區💠]]</tw-passagedata><tw-passagedata pid="11" name="💠環形歸納區💠" tags="" position="100,225" size="100,100"></tw-passagedata><tw-passagedata pid="12" name="💠羽之繭👉壁掛式 • 透明智能馬桶💠" tags="隨身空間" position="225,225" size="100,100">&lt;center&gt;&lt;h3&gt;🚽 壁掛式 • 透明智能馬桶&lt;/h3&gt;&lt;/center&gt;
 這是一個懸空的壁掛式智能馬桶，造型流暢充滿科技感。
 
 它最特殊的功能在於其「觀測模式」。
@@ -627,8 +666,9 @@ Example:
 [[嘗試排泄 (強制回憋懲罰) -&gt; 💠馬桶👉排泄失敗事件💠]]
 [[嘗試排泄 (等待失禁) -&gt; 💠馬桶👉失禁事件💠]]
 [[在馬桶上自慰 -&gt; 💠馬桶👉自慰事件💠]]
-[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="12" name="💠羽之繭👉嵌入式 • 衛浴用品收納壁櫃💠" tags="隨身空間" position="225,225" size="100,100">🧴 嵌入式 • 衛浴用品收納壁櫃
 
+
+[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="13" name="💠羽之繭👉嵌入式 • 衛浴用品收納壁櫃💠" tags="隨身空間" position="350,225" size="100,100">&lt;center&gt;&lt;h3&gt;🧴 嵌入式 • 衛浴用品收納壁櫃&lt;/h3&gt;&lt;/center&gt;
 嵌入牆面的鏡櫃門向兩側滑開，露出了內部井然有序的收納空間。
 這裡具備自動烘乾、紫外線消毒與充電功能，確保所有用品隨時處於無菌且可用的最佳狀態。
 
@@ -638,28 +678,27 @@ Example:
 - 生理類：各式尺寸的衛生棉與生理用品。
 
 所有物品都依據類別被機械臂自動歸位，強迫症般地整齊排列著。
+這些用品不僅是為了清潔身體，更是為了在調教前後，將那具被玩弄得狼藉不堪的肉體重新洗刷乾淨，好迎接下一次的使用。
 
-[[🔙 返回衛浴艙-&gt;💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="13" name="💠羽之繭👉多功能調教 • 淋浴間💠" tags="隨身空間" position="350,225" size="100,100">&lt;div id=&quot;cocoon-shower&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;🚿 淋浴與束縛區&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    這是一個沒有實體門扇的開放式淋浴空間，僅利用真空吸盤伸縮桿掛著雙層浴簾作為簡易遮擋。
-    拉開浴簾，內部的空間寬敞得足以容納兩三人同時洗浴……或者進行某些激烈的運動。
-    &lt;br&gt;
-    牆面上安裝著**多功能恆溫花灑**，旋鈕上標示著從「輕柔霧化」到「強力水柱」等多種水流模式，甚至還有專門用於衝擊敏感部位的脈衝檔位。
-    &lt;br&gt;
-    更令人在意的是，淋浴區的上下左右皆預埋了**金屬扣環與束縛裝置**。
-    這些堅固的錨點無聲地暗示著，這裡隨時可以變成一個溼漉漉的刑場，讓人在熱水與窒息的快感中徹底迷失。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;interaction-options&quot;&gt;
-        /* 這裡可以預留淋浴或自慰的互動按鈕 */
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[🚿 開始淋浴 (普通的洗澡) -&gt; 💠羽之繭👉衛浴艙💠]]&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回衛浴艙 -&gt; 💠羽之繭👉衛浴艙💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="14" name="💠羽之繭👉衛浴艙💠" tags="隨身空間" position="475,225" size="100,100">&lt;center&gt;&lt;h4&gt;🌊 衛浴清潔區&lt;/h4&gt;&lt;/center&gt;
+[[使用衛浴用品自慰 -&gt; 💠衛浴櫃👉自慰事件💠]]
 
+
+[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="14" name="💠羽之繭👉多功能調教 • 淋浴間💠" tags="隨身空間" position="475,225" size="100,100">&lt;center&gt;&lt;h3&gt;🚿 多功能調教 • 淋浴間&lt;/h3&gt;&lt;/center&gt;
+這是一個沒有實體門扇的開放式淋浴空間，僅利用真空吸盤伸縮桿掛著雙層浴簾作為簡易遮擋。
+拉開浴簾，內部的空間寬敞得足以容納兩三人同時洗浴，或者進行某些社交運動。
+
+牆面上安裝著多功能恆溫花灑，旋鈕上標示著從「輕柔霧化」到「強力水柱」等多種水流模式，甚至還有專門用於衝擊敏感部位的脈衝檔位。
+更令人在意的是，淋浴區的上下左右皆預埋了金屬扣環與束縛裝置。
+這些堅固的錨點無聲地暗示著，這裡隨時可以變成一個溼漉漉的刑場，讓人在熱水與窒息的快感中徹底迷失。
+
+在這裡，你可以清洗身上殘留的愛液與髒污。
+——當然，那些被鎖死的貞操帶與強制插入體內的拉珠是無法取下的。
+而對你來說，累積「戰利品」，亦是比了無痕跡更滿足的選擇。
+
+[[淋浴自慰 -&gt; 💠淋浴間👉自慰事件💠]]
+
+
+[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="15" name="💠羽之繭👉衛浴艙💠" tags="隨身空間" position="600,225" size="100,100">&lt;center&gt;&lt;h3&gt;🌊 衛浴清潔區&lt;/h3&gt;&lt;/center&gt;
 你踏入了位於空間12點至3點鐘方向的衛浴區域。
 這裡採用了極致的乾溼分離設計，地面鋪設著防滑且恆溫的親膚材質，赤腳踩上去完全不會感到冰冷。
 
@@ -668,196 +707,190 @@ Example:
 
 [[對著衛浴鏡子自慰 -&gt; 💠衛浴艙👉自慰事件💠]]
 
-這裡有多種衛浴設備。
+多種衛浴設備等待你的使用。
 [[🚿 多功能調教 • 淋浴間 -&gt; 💠羽之繭👉多功能調教 • 淋浴間💠]]
 [[🚽 壁掛式 • 透明智能馬桶 -&gt; 💠羽之繭👉壁掛式 • 透明智能馬桶💠]]
 [[🧴 嵌入式 • 衛浴用品收納壁櫃 -&gt; 💠羽之繭👉嵌入式 • 衛浴用品收納壁櫃💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="15" name="💠羽之繭👉嵌入式 • L型壁掛桌板💠" tags="隨身空間" position="600,225" size="100,100">&lt;div id=&quot;cocoon-desk&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;🛋️ 極簡Ｌ型桌板&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    位於３點至４點鐘方向，一張純白色的**Ｌ型桌板**從牆面延伸而出。
-    它的線條極度簡約，與衛浴艙的外牆結構完美地融為一體，沒有任何多餘的桌腳阻礙雙腿的活動。
-    &lt;br&gt;
-    這裡既是梳妝台，也是臨時的書寫與辦公區域。桌面材質溫潤，似乎還整合了隱藏式的觸控面板，可以控制附近的燈光與氛圍。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="16" name="💠羽之繭👉嵌入式 • 性玩具收納壁櫃💠" tags="隨身空間" position="725,225" size="100,100">&lt;div id=&quot;cocoon-toy-storage&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;🔞 極端設備收納庫&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    位於４點２０分至５點鐘方向的牆面，是一扇帶有生物識別鎖的櫃門。
-    &lt;br&gt;
-    隨著解鎖聲響起，櫃門緩緩開啟，內部透出幽暗的紅光。這裡是用來存放**性玩具與調教設備**的專屬空間。
-    每一件器具都有專屬的固定槽位，並連接了自動清洗與充電接口。從普通的按摩棒到令人望而生畏的電流刑具，各種極端設備在這裡安靜地沉睡，等待著被喚醒的那一刻。
-    &lt;br&gt;
-    （此處內容將隨著收集進度而擴充）
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="17" name="💠羽之繭👉嵌入式 • 零食櫃💠" tags="隨身空間" position="850,225" size="100,100">&lt;div id=&quot;cocoon-snack&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;🍫 物資與零食儲備&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    位於５點２０分至６點１０分區域，這個嵌入式櫃體被劃分為三個功能區塊，滿載著讓人感到幸福的卡路里：
-    &lt;br&gt;
-    - **上層 • 零食區**：
-      堆滿了各式各樣的解饞零嘴，從巧克力、洋芋片到能量棒應有盡有，是墮落生活的源泉。
-    &lt;br&gt;
-    - **中層 • 冷藏區**：
-      放置著一個**便攜式手提冰箱**，裡面冰鎮著碳酸飲料與需要低溫保存的特殊藥劑（或食品）。
-    &lt;br&gt;
-    - **下層 • 儲備區**：
-      存放著整箱的飲用水、壓縮餅乾與長效保存食品，作為緊急狀況下的生存物資。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="18" name="💠羽之繭👉壁掛式 • 飲水機💠" tags="隨身空間" position="975,225" size="100,100">&lt;div id=&quot;cocoon-water&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;💧 速熱飲水站&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    緊鄰著零食櫃與次淨衣區（６點１０分至６點３０分），安裝著一台輕薄的**壁掛式飲水機**。
-    &lt;br&gt;
-    它連接了空間內的無限水循環系統，能夠在一秒內提供設定溫度的飲用水。
-    之所以設置在這個位置，是為了方便在日常活動中隨時補水——或者是為了在進行「憋尿訓練」時，能夠更方便地強迫自己大量攝入水分，維持極限的膀胱充盈狀態。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;interaction-options&quot;&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[🥤 喝一杯溫水 -&gt; 💠羽之繭💠]]&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="19" name="💠羽之繭👉嵌入式 • 次凈衣掛區💠" tags="隨身空間" position="1100,225" size="100,100">&lt;div id=&quot;cocoon-clothes-rack&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;🧥 次淨衣暫存區&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    位於６點３０分至７點２０分的牆面，安裝著一排極簡風格的掛鉤與橫桿。
-    &lt;br&gt;
-    這裡是專門用來放置**「次淨衣」**（穿過一次但還不需要清洗的衣物）的地方。
-    比起隨手丟在椅子上長出「衣服山」，這裡提供了一個更優雅的解決方案。幾件外套與家居服鬆散地掛在這裡，散發著淡淡的生活氣息。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="20" name="💠羽之繭👉弧形艙門💠" tags="隨身空間" position="1225,225" size="100,100">&lt;div id=&quot;cocoon-door&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;🚪 空間氣密艙門&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    位於７點３０分至７點５０分方向，這是一扇與球型內壁完美貼合的**弧形氣密艙門**。
-    &lt;br&gt;
-    門體厚重且具有極佳的隔音效果，將羽之繭內部的私密溫馨與外部的功能性區域完全隔絕。
-    門邊的控制面板上顯示著外部空間的環境數據：
-    &lt;br&gt;
-    - **環形歸納區**：&lt;span style=&quot;color: lightgreen;&quot;&gt;運作正常&lt;/span&gt;
-    - **資源培植區**：&lt;span style=&quot;color: lightgreen;&quot;&gt;環境穩定&lt;/span&gt;
-    &lt;br&gt;
-    只要按下開關，伴隨著洩壓般的氣流聲，艙門將向側邊滑開，通往隨身空間的公共樞紐。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;interaction-options&quot;&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[🚪 開啟艙門，前往外部 -&gt; 💠隨身空間💠]]&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="21" name="💠羽之繭👉嵌入式 • 衣櫃💠" tags="隨身空間" position="100,350" size="100,100">&lt;div id=&quot;cocoon-wardrobe&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;👗 綜合衣物收納&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    佔據了８點至９點４０分的大片牆面，這是羽之繭內最大的收納設施。
-    &lt;br&gt;
-    衣櫃門採用了與牆面相同的「星之織」材質，推開後內部空間層次分明：
-    &lt;br&gt;
-    - **日常區**：掛著舒適的便服、睡衣與替換用的內衣褲。
-    - **特殊區**：收納著諸如膠衣、拘束服、情趣內衣等「工作用」服裝。
-    - **行李區**：底部預留了空間，放置著備用的行李箱與大型包袋。
-    &lt;br&gt;
-    衣櫃內部自帶香氛與除溼系統，確保每一件衣服取出時都帶著陽光般的氣味。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="22" name="💠羽之繭👉多功能 • 投影牆💠" tags="隨身空間" position="225,350" size="100,100">&lt;div id=&quot;cocoon-screen&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;📽️ 沉浸式投影牆&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    １０點至１２點方向的這面弧形牆壁，實際上是一塊巨大的**高解析度投影顯示區**。
-    &lt;br&gt;
-    平時它可以模擬出落地窗外的風景（如雨夜的東京、陽光下的海灘），為封閉的球型空間帶來開闊感。
-    需要時，它可以連結系統資料庫，播放：
-    &lt;br&gt;
-    - **記憶回放**：重溫過去經歷的特殊時刻。
-    - **實時監控**：查看空間外或其他區域的畫面。
-    - **影視娛樂**：單純地看一場電影來放鬆心情。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;interaction-options&quot;&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[🌃 切換背景：雨夜城市 -&gt; 💠羽之繭💠]]&lt;/span&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[🏖️ 切換背景：午後海灘 -&gt; 💠羽之繭💠]]&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="23" name="💠羽之繭👉多功能 • 調教摺疊圓床💠" tags="隨身空間" position="350,350" size="100,100">&lt;div id=&quot;cocoon-bed&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;🛌 夢境核心 • 調教圓床&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    懸浮於球型空間正中央的，是一張巨大的**白色圓型軟床**。
-    &lt;br&gt;
-    床墊的觸感如同棉花糖般柔軟，能夠完美貼合身體的每一道曲線。
-    但仔細觀察便會發現，床沿與床體內部隱藏著無數個**金屬扣環與伸縮帶接口**。只要一聲指令，這張溫馨的睡床就能瞬間變形成為一張功能齊全的刑台，將躺在上面的人牢牢固定成任何羞恥的姿勢。
-    &lt;br&gt;
-    抬頭仰望，穹頂正上方的**「雲端實時監控裝置」**鏡頭正對著床中央，而周圍垂掛的**「懸掛式束縛裝置」**則如同捕捉獵物的蛛網般，靜靜地懸在半空，隨時準備落下。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;interaction-options&quot;&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[💤 躺下休息 -&gt; 💠羽之繭💠]]&lt;/span&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[🔗 啟動束縛模式 (測試) -&gt; 💠羽之繭💠]]&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="24" name="💠羽之繭👉頂部懸掛 • 束縛裝置💠" tags="隨身空間" position="475,350" size="100,100">&lt;div id=&quot;cocoon-bondage&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;⛓️ 穹頂 • 懸掛式束縛系統&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    抬頭仰望，在羽之繭潔白的穹頂之上，隱藏著一套複雜的**機械懸掛系統**。
-    &lt;br&gt;
-    平時這些裝置收納在頂部的凹槽中，一旦啟動，數條高強度的**合成纖維拘束帶**與**金屬鎖鏈**便會垂落而下，懸停在圓床上方。
-    &lt;br&gt;
-    這套系統的設計初衷顯然是為了實現**「立體機動調教」**：
-    它可以輕易地將使用者的四肢吊起，使其懸空呈現出無助的「Ｍ字開腿」或「反弓」姿態；
-    又或者是配合圓床上的扣環，將人像標本一樣呈大字型固定，任由擺布。
-    &lt;br&gt;
-    每一個扣環都經過精細打磨，確保在牢牢鎖住肢體的同時，不會對皮膚造成永久性的物理傷害——但精神上的羞恥烙印除外。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;interaction-options&quot;&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[🔧 降下束縛帶 (檢視模式) -&gt; 💠羽之繭💠]]&lt;/span&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[🧘‍♀️ 嘗試將自己懸掛起來 (需解鎖相關技能) -&gt; 💠羽之繭💠]]&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="25" name="💠羽之繭👉頂部懸掛 • 雲端實時監控裝置💠" tags="隨身空間" position="600,350" size="100,100">&lt;div id=&quot;cocoon-camera&quot;&gt;
-    &lt;center&gt;&lt;h2&gt;👁️ 全景 • 實時觀測中樞&lt;/h2&gt;&lt;/center&gt;
-    &lt;br&gt;
-    在穹頂的正中央，也就是圓床的正上方，鑲嵌著一顆散發著微弱呼吸燈光的球型鏡頭——**「主觀測眼」**。
-    &lt;br&gt;
-    以此為核心，周圍還分佈著數個隱藏式的輔助鏡頭，構成了**３６０度無死角的監控網絡**。
-    在這個羽之繭內，任何角落、任何角度的私密行為都無法逃脫它的捕捉。
-    &lt;br&gt;
-    這些鏡頭具備**４Ｋ超清畫質、紅外線夜視以及微距變焦功能**。
-    它們不僅是為了記錄，更是為了滿足「被窺視」的快感。所有錄製的影像都會實時同步到**雲端資料庫**（或本地的投影牆），讓妳可以隨時回顧自己在床上、浴室甚至是馬桶上失態的模樣。
-    &lt;br&gt;
-    &lt;i&gt;「妳是被飼養的寵物，妳的一舉一動都值得被細細品味。」&lt;/i&gt; —— 系統提示音彷彿這樣低語著。
-    &lt;br&gt;&lt;br&gt;
-    &lt;div class=&quot;interaction-options&quot;&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[📹 查看目前鏡頭視角 -&gt; 💠羽之繭👉多功能 • 投影牆💠]]&lt;/span&gt;
-        - &lt;span class=&quot;interactive-link&quot;&gt;[[🔴 開啟/關閉 錄製指示燈 -&gt; 💠羽之繭💠]]&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;br&gt;
-    &lt;div class=&quot;navigation-footer&quot;&gt;
-        [[🔙 返回主介面 -&gt; 💠羽之繭💠]]
-    &lt;/div&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="26" name="💠羽之繭💠" tags="隨身空間" position="725,350" size="100,100">&lt;center&gt;&lt;h2&gt;🔘羽之繭🔘&lt;/h2&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="16" name="💠羽之繭👉嵌入式 • L型壁掛桌板💠" tags="隨身空間" position="725,225" size="100,100">&lt;center&gt;&lt;h3&gt;🛋️ 嵌入式 • L型壁掛桌板&lt;/h3&gt;&lt;/center&gt;
+位於 3 點至 4 點鐘方向，一張純白色的L型桌板從牆面延伸而出。
+它的線條極度簡約，與衛浴艙的外牆結構完美地融為一體，沒有任何多餘的桌腳阻礙雙腿的活動。
+這裡既是梳妝台，也是臨時的書寫與辦公區域。桌面材質溫潤，似乎還整合了隱藏式的觸控面板，可以控制附近的燈光與氛圍。
+
+僅有桌板而無抽屜的設計，讓你在此處的任何動作都無所遁形。
+若被迫趴在桌面上，你那因為憋尿而高高隆起的小腹將會直接壓迫在冰涼的桌沿，帶來清晰的折磨與快感。
+此外，圓弧桌緣也很適合肢體接觸。
+
+[[搭配桌板自慰 -&gt; 💠桌板👉自慰事件💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="17" name="💠羽之繭👉嵌入式 • 性玩具收納壁櫃💠" tags="隨身空間" position="850,225" size="100,100">&lt;center&gt;&lt;h3&gt;🔞 嵌入式 • 性玩具收納壁櫃&lt;/h3&gt;&lt;/center&gt;
+位於4點20分至5點鐘方向的牆面，是一扇帶有生物識別鎖的櫃門。
+隨著解鎖聲響起，櫃門緩緩開啟，內部透出幽暗的紅光。這裡是用來存放性玩具與調教設備的專屬空間。
+每一件器具都有專屬的固定槽位，並連接了自動清洗、烘乾、消毒與充電接口。
+
+這裡收藏著各種巨大、猙獰且極端的性玩具套裝組件：
+帶有倒刺與顆粒的物理刺激器具、能釋放電流與震動的感官折磨工具、以及各種定時遙控的智能鎖。
+還有那套專屬於你的透明貞操帶備用零件，以及那些尺寸驚人的拉珠——它們曾將你的子宮頸口死死卡住，將你的內臟擠壓變形。
+這不是展示櫃，而是你的刑具庫。
+
+[[選用玩具自慰 -&gt; 💠玩具櫃👉自慰事件💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="18" name="💠羽之繭👉嵌入式 • 零食櫃💠" tags="隨身空間" position="975,225" size="100,100">&lt;center&gt;&lt;h3&gt;🍫 嵌入式 • 零食櫃&lt;/h3&gt;&lt;/center&gt;
+位於5點20分至6點10分區域，這個嵌入式櫃體被劃分為三個功能區塊，滿載著讓人感到幸福的卡路里。
+
+上層，零食區。
+堆滿了各式各樣的解饞零嘴，從巧克力、蜂蜜、洋芋片到能量棒應有盡有，是墮落生活的源泉。
+
+中層，冷藏區。
+放置著一個便攜式手提冰箱，裡面冰鎮著碳酸飲料與需要低溫保存的特殊藥劑（或食品）。
+
+下層，儲備區。
+存放著整箱的飲用水、壓縮餅乾與長效保存食品，作為緊急狀況下的生存物資。
+
+此外，一些食物也很適合妝點、流淌於幼嫩肉體上。
+若使用此種玩法，或許你可以錄影，將其散播網絡給大眾欣賞。
+
+[[人體盛 -&gt; 💠零食櫃👉自慰事件💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="19" name="💠羽之繭👉壁掛式 • 飲水機💠" tags="隨身空間" position="1100,225" size="100,100">&lt;center&gt;&lt;h3&gt;💧 壁掛式 • 飲水機&lt;/h3&gt;&lt;/center&gt;
+於6點10分至6點30分處，比鄰零食櫃與次淨衣區，是一台壁掛式飲水機。
+它連接了空間內的無限水循環系統，能夠在一秒內提供設定溫度的飲用水。
+
+這個位置方便隨時補水。
+這對於身負「淫憋之賜」的你來說，是既甜蜜又殘酷的刑具。
+
+為了體驗極限憋尿、甚至失禁的快感，你偶爾會強迫自己大量攝入水分。
+水流入口，最終匯入那早已不堪重負的膀胱，將下腹撐得如懷胎般隆起。
+直至超過2000ml的部分，在與「強制回憋」的拉扯中失禁。
+
+[[灌水 -&gt; 💠飲水機👉灌水事件💠]]
+[[使用飲水機自慰 -&gt; 💠飲水機👉自慰事件💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="20" name="💠羽之繭👉嵌入式 • 次凈衣掛區💠" tags="隨身空間" position="1225,225" size="100,100">&lt;center&gt;&lt;h3&gt;🧥 嵌入式 • 次凈衣掛區&lt;/h3&gt;&lt;/center&gt;
+位於6點30分至7點20分的牆面，安裝著一排極簡風格的掛鉤與橫桿。
+這裡是專門用來放置次淨衣的地方。
+
+幾件外套與家居服鬆散地掛在這裡，散發著淡淡的生活氣息。
+或許其中還夾雜著你剛脫下的那條純白吊帶短裙，上面可能還殘留著些許乾涸的愛液，或是因為漏尿而留下的淡黃色漬跡。
+
+若想洗某些還不算髒的次淨衣，又不想浪費，或許可以拿它們來做些什麼。
+或塞或綁，足以使它們需要被洗滌。
+
+[[使用衣物自慰 -&gt; 💠次凈衣👉自慰事件💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="21" name="💠羽之繭👉弧形艙門💠" tags="隨身空間" position="100,350" size="100,100">&lt;center&gt;&lt;h3&gt;🚪 弧形艙門&lt;/h3&gt;&lt;/center&gt;
+位於7點30分至7點50分方向，這是一扇與球型內壁完美貼合的弧形氣密艙門。
+門體厚重且具有極佳的隔音效果，將羽之繭內部的私密溫馨與外部的功能性區域完全隔絕。
+
+門邊的控制面板上顯示著外部空間的環境數據：
+- 環形歸納區：運作正常
+- 資源培植區：環境穩定
+
+只要按下開關，伴隨著洩壓般的氣流聲，艙門將向側邊滑開，通往隨身空間的公共樞紐。
+這裡是你通往外界的出口，也是將外界獵物抓捕進來的入口。
+
+[[倚靠艙門自慰 -&gt; 💠艙門👉自慰事件💠]]
+[[開啟艙門，前往外部 -&gt; 💠隨身空間💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="22" name="💠羽之繭👉嵌入式 • 衣櫃💠" tags="隨身空間" position="225,350" size="100,100">&lt;center&gt;&lt;h4&gt;👗 嵌入式 • 衣櫃&lt;/h4&gt;&lt;/center&gt;
+佔據了8點至9點40分的大片牆面，這是羽之繭內最大的收納設施。
+衣櫃門採用了與牆面相同的「星之織」材質，內部空間分三層。
+
+上層，日常區。
+分門別類，掛著不同世界的校服、常服或職業衣裝。
+底板上則摺疊著幾件通用便服......雖然你平時大多只穿那件純白吊帶短裙。
+
+中層，特殊區。
+收納著諸如膠衣、拘束服、情趣內衣等「工作用」服裝。
+這些服裝大多設計大膽，旨在凸顯你那腫大的乳頭與被撐大的下腹。
+
+下層，行李區。
+底部預留了空間，放置著備用的行李箱與大型包袋。
+
+自帶香氛與除溼系統，確保每一件衣服取出時都帶著陽光般的氣味。
+這裡是你唯一不會自慰的地方——地球上養成的收納習慣，會讓你平等地敵視每一個弄亂衣櫃的傢伙！
+
+[[換裝 -&gt; 💠衣櫃👉換裝事件💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="23" name="💠羽之繭👉多功能 • 投影牆💠" tags="隨身空間" position="350,350" size="100,100">&lt;center&gt;&lt;h3&gt;📽️ 多功能 • 投影牆&lt;/h3&gt;&lt;/center&gt;
+10點至12點方向的弧形牆壁，實際上是一塊巨大的高解析度投影顯示區。
+此外，它可以模擬出落地窗外的風景，為封閉的球型空間帶來開闊感。
+[[切換背景 -&gt; 💠投影牆👉背景選擇💠]]
+
+需要時，它可以連結雲端信息庫，進行：
+- 記憶回放：重溫不同世界的旅程，或被玩壞的羞恥。
+- 實時監控：查看空間外或其他區域的畫面，或者連接頭頂的監控裝置，像照鏡子一樣看著自己被調教的實況。
+- 影視娛樂：單純地看看什麼來放鬆心情。
+
+[[觀看監控 -&gt; 💠投影牆👉觀看監控💠]]
+[[觀看記憶 -&gt; 💠投影牆👉記憶選擇💠]]
+[[選擇娛樂項目 -&gt; 💠投影牆👉娛樂選擇💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="24" name="💠投影牆👉背景選擇💠" tags="" position="475,350" size="100,100">不同世界的風光於你眼前懸浮輪換，滿目琳瑯。
+
+[[切換背景：雨夜霓虹 -&gt; 💠投影牆👉雨夜霓虹💠]]
+[[切換背景：午後海灘 -&gt; 💠投影牆👉午後海灘💠]]
+[[切換背景：蒼茫雪國 -&gt; 💠投影牆👉蒼茫雪國💠]]
+[[切換背景：風吹草低 -&gt; 💠投影牆👉風吹草低💠]]
+[[切換背景：高天石峰 -&gt; 💠投影牆👉高天石峰💠]]
+
+[[切換背景：學校對面 -&gt; 💠投影牆👉學校對面💠]]
+[[切換背景：堡壘花園 -&gt; 💠投影牆👉堡壘花園💠]]
+[[切換背景：大隱古市 -&gt; 💠投影牆👉大隱古市💠]]
+[[切換背景：末日地窟 -&gt; 💠投影牆👉末日地窟💠]]
+[[切換背景：門派據點 -&gt; 💠投影牆👉門派據點💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="25" name="💠羽之繭👉多功能 • 調教摺疊圓床💠" tags="隨身空間" position="600,350" size="100,100">&lt;center&gt;&lt;h3&gt;🛌 多功能 • 調教摺疊圓床&lt;/h3&gt;&lt;/center&gt;
+懸浮於球型空間正中央的，是一張巨大的白色圓型軟床。
+床架由「星之織」打造，床墊的觸感如同棉花糖般柔軟，能夠完美貼合身體的每一道曲線。
+但仔細觀察便會發現，床沿與床體內部隱藏著無數個金屬扣環與伸縮帶接口。只要一聲指令，這張溫馨的睡床就能瞬間變形成為一張功能齊全的刑台，將躺在上面的人牢牢固定成任何羞恥的姿勢。
+
+抬頭仰望，穹頂正上方的「雲端實時監控裝置」鏡頭正對著床中央，而周圍垂掛的「懸掛式束縛裝置」則如同捕捉獵物的蛛網般，靜靜地懸在半空，隨時準備落下。
+這裡是你的休息處，也是你身為「門奴」的獻祭台。
+
+[[在床上自慰 -&gt; 💠圓床👉自慰事件💠]]
+[[啟動束縛模式 -&gt; 💠羽之繭👉頂部懸掛 • 束縛裝置💠]]
+[[查看實時監控 -&gt; 💠羽之繭👉頂部懸掛 • 雲端實時監控裝置💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="26" name="💠羽之繭👉頂部懸掛 • 束縛裝置💠" tags="隨身空間" position="725,350" size="100,100">&lt;center&gt;&lt;h3&gt;⛓️ 頂部懸掛 • 束縛裝置&lt;/h3&gt;&lt;/center&gt;
+抬頭仰望，在羽之繭潔白的穹頂之上，隱藏著一套複雜的機械懸掛系統。
+平時這些裝置收納在頂部的凹槽中，一旦啟動，數條高強度的合成纖維拘束帶與金屬鎖鏈便會垂落而下，懸停在圓床上方。
+
+這套系統的設計初衷顯然是為了實現「立體機動調教」：
+它可以輕易地將使用者的四肢吊起，使其懸空呈現出無助的「M字開腿」或「反弓」姿態；
+又或者是配合圓床上的扣環，將人像標本一樣呈大字型固定，任由擺布。
+
+每一個扣環都經過精細打磨，確保在牢牢鎖住肢體的同時，不會對皮膚造成永久性的物理傷害——但精神上的羞恥烙印除外。
+
+[[將自己懸掛束縛並自慰 -&gt; 💠束縛👉自慰事件💠]]
+[[查看實時監控 -&gt; 💠羽之繭👉頂部懸掛 • 雲端實時監控裝置💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="27" name="💠羽之繭👉頂部懸掛 • 雲端實時監控裝置💠" tags="隨身空間" position="850,350" size="100,100">&lt;center&gt;&lt;h3&gt;👁️ 頂部懸掛 • 雲端實時監控裝置&lt;/h3&gt;&lt;/center&gt;
+在穹頂的正中央，也就是圓床的正上方，鑲嵌著一顆散發著微弱呼吸燈光的球型鏡頭——「主觀測眼」。
+以此為核心，周圍還分佈著數個隱藏式的輔助鏡頭，構成了 360 度無死角的監控網絡。
+在這個羽之繭內，任何角落、任何角度的私密行為都無法逃脫它的捕捉。
+
+這些鏡頭具備 4K 超清畫質、紅外線夜視以及微距變焦功能。
+它們不僅是為了記錄，更是為了滿足「被窺視」的快感。所有錄製的影像都會實時同步到雲端資料庫（或本地的投影牆），讓你可以隨時回顧自己在床上、浴室甚至是馬桶上失態的模樣。
+「你是被飼養的寵物，你的一舉一動都值得被細細品味。」——系統提示音彷彿這樣低語著。
+
+[[對著鏡頭表演自慰 -&gt; 💠監控👉自慰事件💠]]
+[[查看目前鏡頭視角 -&gt; 💠羽之繭👉多功能 • 投影牆💠]]
+
+
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="28" name="💠羽之繭💠" tags="隨身空間" position="975,350" size="100,100">&lt;center&gt;&lt;h2&gt;🔘羽之繭🔘&lt;/h2&gt;&lt;/center&gt;
 妳身處於直徑數米的完美球型懸浮空間內，四周是由「星之織」構成的純白壁面。
 這裡沒有冷硬的牆角與邊界，視線所及皆是無縫、圓弧、一體的柔和曲線。
 
@@ -887,7 +920,13 @@ Example:
 10:00 - 12:00 ➤ [[📽️ 多功能投影牆 -&gt; 💠羽之繭👉多功能 • 投影牆💠]]
 
 
-&lt;center&gt;[[返回 -&gt; 💠隨身空間💠]]&lt;/center&gt;</tw-passagedata></tw-storydata>
+&lt;center&gt;[[返回 -&gt; 💠隨身空間💠]]&lt;/center&gt;</tw-passagedata><tw-passagedata pid="29" name="Prompt_World_Common" tags="widget" position="1100,350" size="100,100">&lt;&lt;widget &quot;load_world_prompt&quot;&gt;&gt;
+    &lt;&lt;set $prompt_world to &quot;【世界觀設定】
+    這是一個充滿奇幻色彩的世界，人類與亞人共存。
+    貨幣單位：金幣。
+    目前地點：隨身空間『羽之繭』內部。
+    &quot;&gt;&gt;
+&lt;&lt;/widget&gt;&gt;</tw-passagedata></tw-storydata>
 	<script id="script-sugarcube" type="text/javascript">
 	/*! SugarCube JS */
 	if(document.documentElement.getAttribute("data-init")==="loading"){!function(window,document,jQuery,undefined){"use strict";function _classCallCheck(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function _toConsumableArray(e){if(Array.isArray(e)){for(var t=0,r=Array(e.length);t<e.length;t++)r[t]=e[t];return r}return Array.from(e)}var _createClass=function(){function e(e,t){for(var r=0;r<t.length;r++){var n=t[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(e,n.key,n)}}return function(t,r,n){return r&&e(t.prototype,r),n&&e(t,n),t}}(),_slicedToArray=function(){function e(e,t){var r=[],n=!0,a=!1,i=undefined;try{for(var o,s=e[Symbol.iterator]();!(n=(o=s.next()).done)&&(r.push(o.value),!t||r.length!==t);n=!0);}catch(e){a=!0,i=e}finally{try{!n&&s.return&&s.return()}finally{if(a)throw i}}return r}return function(t,r){if(Array.isArray(t))return t;if(Symbol.iterator in Object(t))return e(t,r);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}(),_typeof="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},errorPrologRegExp=/^(?:(?:uncaught\s+(?:exception:\s+)?)?\w*(?:error|exception|_err):\s+)+/i,Alert=function(){function e(e,t,r,n){var a="fatal"===e,i="Apologies! "+(a?"A fatal":"An")+" error has occurred.";i+=a?" Aborting.":" You may be able to continue, but some parts may not work properly.",null==t&&null==r||(i+="\n\nError",null!=t&&(i+=" ["+t+"]"),i+=null!=r?": "+r.replace(errorPrologRegExp,"")+".":": unknown error."),"object"===(void 0===n?"undefined":_typeof(n))&&n.stack&&(i+="\n\nStack Trace:\n"+n.stack),window.alert(i)}function t(t,r,n){e(null,t,r,n)}function r(t,r,n){e("fatal",t,r,n)}return function(e){window.onerror=function(n,a,i,o,s){"complete"===document.readyState?t(null,n,s):(r(null,n,s),window.onerror=e,"function"==typeof window.onerror&&window.onerror.apply(this,arguments))}}(window.onerror),Object.freeze(Object.defineProperties({},{error:{value:t},fatal:{value:r}}))}(),Patterns=function(){var e=function(){var e=new Map([[" ","\\u0020"],["\f","\\f"],["\n","\\n"],["\r","\\r"],["\t","\\t"],["\v","\\v"],[" ","\\u00a0"],[" ","\\u1680"],["᠎","\\u180e"],[" ","\\u2000"],[" ","\\u2001"],[" ","\\u2002"],[" ","\\u2003"],[" ","\\u2004"],[" ","\\u2005"],[" ","\\u2006"],[" ","\\u2007"],[" ","\\u2008"],[" ","\\u2009"],[" ","\\u200a"],["\u2028","\\u2028"],["\u2029","\\u2029"],[" ","\\u202f"],[" ","\\u205f"],["　","\\u3000"],["\ufeff","\\ufeff"]]),t=/^\s$/,r="";return e.forEach(function(e,n){t.test(n)||(r+=e)}),r?"[\\s"+r+"]":"\\s"}(),t="\\s"===e?"\\S":e.replace(/^\[/,"[^"),r="[0-9A-Z_a-z\\-\\u00c0-\\u00d6\\u00d8-\\u00f6\\u00f8-\\u00ff\\u0150\\u0170\\u0151\\u0171]",n=r.replace("\\-",""),a=function(){return"("+r+"+)\\(([^\\)\\|\\n]+)\\):|("+r+"+):([^;\\|\\n]+);|((?:\\."+r+"+)+);|((?:#"+r+"+)+);"}();return Object.freeze({space:e,spaceNoTerminator:"[\\u0020\\f\\t\\v\\u00a0\\u1680\\u180e\\u2000-\\u200a\\u202f\\u205f\\u3000\\ufeff]",lineTerminator:"[\\n\\r\\u2028\\u2029]",notSpace:t,anyChar:"(?:.|[\\n\\r\\u2028\\u2029])",anyLetter:r,anyLetterStrict:n,identifierFirstChar:"[$A-Z_a-z]",identifierNextChar:"[$0-9A-Z_a-z]",identifier:"[$A-Z_a-z][$0-9A-Z_a-z]*",variableSigil:"[$_]",variable:"[$_][$A-Z_a-z][$0-9A-Z_a-z]*",macroName:"[A-Za-z][\\w-]*|[=-]",templateName:"[A-Za-z][\\w-]*",cssImage:"\\[[<>]?[Ii][Mm][Gg]\\[(?:\\s|\\S)*?\\]\\]+",inlineCss:a,url:"(?:file|https?|mailto|ftp|javascript|irc|news|data):[^\\s'\"]+"})}();!function(){!function(e){if(e&&e.prototype&&null==e.prototype.firstElementChild){var t=Node.ELEMENT_NODE;Object.defineProperty(e.prototype,"firstElementChild",{get:function(){for(var e=this.childNodes,r=0;r<e.length;++r){var n=e[r];if(n.nodeType===t)return n}return null}})}}(window.Node||window.Element)}(),function(){function e(e,t){var r=Number.parseInt(e,10)||0;if(r<1)return"";var n=void 0===t?"":String(t);for(""===n&&(n=" ");n.length<r;){var a=n.length,i=r-a;n+=a>i?n.slice(0,i):n}return n.length>r&&(n=n.slice(0,r)),n}var t=function(){function e(e,n){var a=String(e);if(!a)return a;switch(n){case"start":return t.test(a)?a.replace(t,""):a;case"end":return r.test(a)?a.replace(r,""):a;default:throw new Error('_trimString called with incorrect where parameter value: "'+n+'"')}}var t=new RegExp("^"+Patterns.space+Patterns.space+"*"),r=new RegExp(""+Patterns.space+Patterns.space+"*$");return e}();Array.prototype.flat||Object.defineProperty(Array.prototype,"flat",{configurable:!0,writable:!0,value:function(){function e(){if(null==this)throw new TypeError("Array.prototype.flat called on null or undefined");var t=0===arguments.length?1:Number(arguments[0])||0;return t<1?Array.prototype.slice.call(this):Array.prototype.reduce.call(this,function(r,n){return n instanceof Array?r.push.apply(r,_toConsumableArray(e.call(n,t-1))):r.push(n),r},[])}return e}()}),Array.prototype.flatMap||Object.defineProperty(Array.prototype,"flatMap",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.flatMap called on null or undefined");return Array.prototype.map.apply(this,arguments).flat()}}),Array.prototype.includes||Object.defineProperty(Array.prototype,"includes",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.includes called on null or undefined");if(0===arguments.length)return!1;var e=this.length>>>0;if(0===e)return!1;var t=arguments[0],r=Number(arguments[1])||0;for(r<0&&(r=Math.max(0,e+r));r<e;++r){var n=this[r];if(n===t||n!==n&&t!==t)return!0}return!1}}),Object.entries||Object.defineProperty(Object,"entries",{configurable:!0,writable:!0,value:function(e){if("object"!==(void 0===e?"undefined":_typeof(e))||null===e)throw new TypeError("Object.entries object parameter must be an object");return Object.keys(e).map(function(t){return[t,e[t]]})}}),Object.fromEntries||Object.defineProperty(Object,"fromEntries",{configurable:!0,writable:!0,value:function(e){return Array.from(e).reduce(function(e,t){if(Object(t)!==t)throw new TypeError("Object.fromEntries iterable parameter must yield objects");return t[0]in e?Object.defineProperty(e,t[0],{configurable:!0,enumerable:!0,writable:!0,value:t[1]}):e[t[0]]=t[1],e},{})}}),Object.getOwnPropertyDescriptors||Object.defineProperty(Object,"getOwnPropertyDescriptors",{configurable:!0,writable:!0,value:function(e){if(null==e)throw new TypeError("Object.getOwnPropertyDescriptors object parameter is null or undefined");var t=Object(e);return Reflect.ownKeys(t).reduce(function(e,r){var n=Object.getOwnPropertyDescriptor(t,r);return void 0!==n&&(r in e?Object.defineProperty(e,r,{configurable:!0,enumerable:!0,writable:!0,value:n}):e[r]=n),e},{})}}),Object.values||Object.defineProperty(Object,"values",{configurable:!0,writable:!0,value:function(e){if("object"!==(void 0===e?"undefined":_typeof(e))||null===e)throw new TypeError("Object.values object parameter must be an object");return Object.keys(e).map(function(t){return e[t]})}}),String.prototype.padStart||Object.defineProperty(String.prototype,"padStart",{configurable:!0,writable:!0,value:function(t,r){if(null==this)throw new TypeError("String.prototype.padStart called on null or undefined");var n=String(this),a=n.length,i=Number.parseInt(t,10);return i<=a?n:e(i-a,r)+n}}),String.prototype.padEnd||Object.defineProperty(String.prototype,"padEnd",{configurable:!0,writable:!0,value:function(t,r){if(null==this)throw new TypeError("String.prototype.padEnd called on null or undefined");var n=String(this),a=n.length,i=Number.parseInt(t,10);return i<=a?n:n+e(i-a,r)}}),String.prototype.trimStart||Object.defineProperty(String.prototype,"trimStart",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.trimStart called on null or undefined");return t(this,"start")}}),String.prototype.trimLeft||Object.defineProperty(String.prototype,"trimLeft",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.trimLeft called on null or undefined");return t(this,"start")}}),String.prototype.trimEnd||Object.defineProperty(String.prototype,"trimEnd",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.trimEnd called on null or undefined");return t(this,"end")}}),String.prototype.trimRight||Object.defineProperty(String.prototype,"trimRight",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.trimRight called on null or undefined");return t(this,"end")}})}(),function(){function _random(){var e=void 0,t=void 0;switch(arguments.length){case 0:throw new Error("_random called with insufficient parameters");case 1:e=0,t=arguments[0];break;default:e=arguments[0],t=arguments[1]}if(e>t){var r=[t,e];e=r[0],t=r[1]}return Math.floor(_nativeMathRandom()*(t-e+1))+e}function _randomIndex(e,t){var r=void 0,n=void 0;switch(t.length){case 1:r=0,n=e-1;break;case 2:r=0,n=Math.trunc(t[1]);break;default:r=Math.trunc(t[1]),n=Math.trunc(t[2])}return Number.isNaN(r)?r=0:!Number.isFinite(r)||r>=e?r=e-1:r<0&&(r=e+r)<0&&(r=0),Number.isNaN(n)?n=0:!Number.isFinite(n)||n>=e?n=e-1:n<0&&(n=e+n)<0&&(n=e-1),_random(r,n)}function _getCodePointStartAndEnd(e,t){var r=e.charCodeAt(t);if(Number.isNaN(r))return{char:"",start:-1,end:-1};if(r<55296||r>57343)return{char:e.charAt(t),start:t,end:t};if(r>=55296&&r<=56319){var n=t+1;if(n>=e.length)throw new Error("high surrogate without trailing low surrogate");var a=e.charCodeAt(n);if(a<56320||a>57343)throw new Error("high surrogate without trailing low surrogate");return{char:e.charAt(t)+e.charAt(n),start:t,end:n}}if(0===t)throw new Error("low surrogate without leading high surrogate");var i=t-1,o=e.charCodeAt(i);if(o<55296||o>56319)throw new Error("low surrogate without leading high surrogate");return{char:e.charAt(i)+e.charAt(t),start:i,end:t}}var _nativeMathRandom=Math.random;Object.defineProperty(Array,"random",{configurable:!0,writable:!0,value:function(e){if("object"!==(void 0===e?"undefined":_typeof(e))||null===e||!Object.prototype.hasOwnProperty.call(e,"length"))throw new TypeError("Array.random array parameter must be an array or array-lke object");var t=e.length>>>0;if(0!==t){return e[0===arguments.length?_random(0,t-1):_randomIndex(t,Array.prototype.slice.call(arguments,1))]}}}),Object.defineProperty(Array.prototype,"concatUnique",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.concatUnique called on null or undefined");var e=Array.from(this);if(0===arguments.length)return e;var t=Array.prototype.reduce.call(arguments,function(e,t){return e.concat(t)},[]),r=t.length;if(0===r)return e;for(var n=Array.prototype.indexOf,a=Array.prototype.push,i=0;i<r;++i){var o=t[i];-1===n.call(e,o)&&a.call(e,o)}return e}}),Object.defineProperty(Array.prototype,"count",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.count called on null or undefined");for(var e=Array.prototype.indexOf,t=arguments[0],r=Number(arguments[1])||0,n=0;-1!==(r=e.call(this,t,r));)++n,++r;return n}}),Object.defineProperty(Array.prototype,"delete",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.delete called on null or undefined");if(0===arguments.length)return[];var e=this.length>>>0;if(0===e)return[];for(var t=Array.prototype.concat.apply([],arguments),r=t.length,n=[],a=0;a<e;++a)for(var i=this[a],o=0;o<r;++o){var s=t[o];if(i===s||i!==i&&s!==s){n.push(a);break}}for(var u=[],l=0,c=n.length;l<c;++l)u[l]=this[n[l]];for(var d=Array.prototype.splice,f=n.length-1;f>=0;--f)d.call(this,n[f],1);return u}}),Object.defineProperty(Array.prototype,"deleteAt",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.deleteAt called on null or undefined");if(0===arguments.length)return[];var e=this.length>>>0;if(0===e)return[];for(var t=Array.prototype.splice,r=[].concat(_toConsumableArray(new Set(Array.prototype.concat.apply([],arguments).map(function(t){return t<0?Math.max(0,e+t):t})).values())),n=[].concat(_toConsumableArray(r)).sort(function(e,t){return t-e}),a=[],i=0,o=r.length;i<o;++i)a[i]=this[r[i]];for(var s=0,u=n.length;s<u;++s)t.call(this,n[s],1);return a}}),Object.defineProperty(Array.prototype,"deleteWith",{configurable:!0,writable:!0,value:function(e,t){if(null==this)throw new TypeError("Array.prototype.deleteWith called on null or undefined");if("function"!=typeof e)throw new Error("Array.prototype.deleteWith predicate parameter must be a function");var r=this.length>>>0;if(0===r)return[];for(var n=Array.prototype.splice,a=[],i=[],o=0;o<r;++o)e.call(t,this[o],o,this)&&(i.push(this[o]),a.push(o));for(var s=a.length-1;s>=0;--s)n.call(this,a[s],1);return i}}),Object.defineProperty(Array.prototype,"first",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.first called on null or undefined");if(0!=this.length>>>0)return this[0]}}),Object.defineProperty(Array.prototype,"includesAll",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.includesAll called on null or undefined");if(1===arguments.length)return Array.isArray(arguments[0])?Array.prototype.includesAll.apply(this,arguments[0]):Array.prototype.includes.apply(this,arguments);for(var e=0,t=arguments.length;e<t;++e)if(!Array.prototype.some.call(this,function(e){return e===this.val||e!==e&&this.val!==this.val},{val:arguments[e]}))return!1;return!0}}),Object.defineProperty(Array.prototype,"includesAny",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.includesAny called on null or undefined");if(1===arguments.length)return Array.isArray(arguments[0])?Array.prototype.includesAny.apply(this,arguments[0]):Array.prototype.includes.apply(this,arguments);for(var e=0,t=arguments.length;e<t;++e)if(Array.prototype.some.call(this,function(e){return e===this.val||e!==e&&this.val!==this.val},{val:arguments[e]}))return!0;return!1}}),Object.defineProperty(Array.prototype,"last",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.last called on null or undefined");var e=this.length>>>0;if(0!==e)return this[e-1]}}),Object.defineProperty(Array.prototype,"pluck",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.pluck called on null or undefined");var e=this.length>>>0;if(0!==e){var t=0===arguments.length?_random(0,e-1):_randomIndex(e,[].concat(Array.prototype.slice.call(arguments)));return Array.prototype.splice.call(this,t,1)[0]}}}),Object.defineProperty(Array.prototype,"pluckMany",{configurable:!0,writable:!0,value:function(e){if(null==this)throw new TypeError("Array.prototype.pluckMany called on null or undefined");var t=this.length>>>0;if(0===t)return[];var r=Math.trunc(e);if(!Number.isInteger(r))throw new Error("Array.prototype.pluckMany want parameter must be an integer");if(r<1)return[];r>t&&(r=t);var n=Array.prototype.splice,a=[],i=t-1;do{a.push(n.call(this,_random(0,i--),1)[0])}while(a.length<r);return a}}),Object.defineProperty(Array.prototype,"pushUnique",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.pushUnique called on null or undefined");var e=arguments.length;if(0===e)return this.length>>>0;for(var t=Array.prototype.indexOf,r=Array.prototype.push,n=0;n<e;++n){var a=arguments[n];-1===t.call(this,a)&&r.call(this,a)}return this.length>>>0}}),Object.defineProperty(Array.prototype,"random",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.random called on null or undefined");var e=this.length>>>0;if(0!==e){return this[0===arguments.length?_random(0,e-1):_randomIndex(e,[].concat(Array.prototype.slice.call(arguments)))]}}}),Object.defineProperty(Array.prototype,"randomMany",{configurable:!0,writable:!0,value:function(e){if(null==this)throw new TypeError("Array.prototype.randomMany called on null or undefined");var t=this.length>>>0;if(0===t)return[];var r=Math.trunc(e);if(!Number.isInteger(r))throw new Error("Array.prototype.randomMany want parameter must be an integer");if(r<1)return[];r>t&&(r=t);var n=new Map,a=[],i=t-1;do{var o=void 0;do{o=_random(0,i)}while(n.has(o));n.set(o,!0),a.push(this[o])}while(a.length<r);return a}}),Object.defineProperty(Array.prototype,"shuffle",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.shuffle called on null or undefined");var e=this.length>>>0;if(0===e)return this;for(var t=e-1;t>0;--t){var r=Math.floor(_nativeMathRandom()*(t+1));if(t!==r){var n=this[t];this[t]=this[r],this[r]=n}}return this}}),Object.defineProperty(Array.prototype,"unshiftUnique",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.unshiftUnique called on null or undefined");var e=arguments.length;if(0===e)return this.length>>>0;for(var t=Array.prototype.indexOf,r=Array.prototype.unshift,n=0;n<e;++n){var a=arguments[n];-1===t.call(this,a)&&r.call(this,a)}return this.length>>>0}}),Object.defineProperty(Function.prototype,"partial",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Function.prototype.partial called on null or undefined");var e=Array.prototype.slice,t=this,r=e.call(arguments,0);return function(){for(var n=[],a=0,i=0;i<r.length;++i)n.push(r[i]===undefined?arguments[a++]:r[i]);return t.apply(this,n.concat(e.call(arguments,a)))}}}),Object.defineProperty(Math,"clamp",{configurable:!0,writable:!0,value:function(e,t,r){var n=Number(e);return Number.isNaN(n)?NaN:n.clamp(t,r)}}),Object.defineProperty(Math,"easeInOut",{configurable:!0,writable:!0,value:function(e){return 1-(Math.cos(Number(e)*Math.PI)+1)/2}}),Object.defineProperty(Number.prototype,"clamp",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Number.prototype.clamp called on null or undefined");if(2!==arguments.length)throw new Error("Number.prototype.clamp called with an incorrect number of parameters");var e=Number(arguments[0]),t=Number(arguments[1]);if(e>t){var r=[t,e];e=r[0],t=r[1]}return Math.min(Math.max(this,e),t)}}),RegExp.escape||function(){var e=/[\\^$*+?.()|[\]{}]/g,t=new RegExp(e.source);Object.defineProperty(RegExp,"escape",{configurable:!0,writable:!0,value:function(r){var n=String(r);return n&&t.test(n)?n.replace(e,"\\$&"):n}})}(),function(){var e=/{(\d+)(?:,([+-]?\d+))?}/g,t=new RegExp(e.source);Object.defineProperty(String,"format",{configurable:!0,writable:!0,value:function(r){function n(e,t,r){if(!t)return e;var n=Math.abs(t)-e.length;if(n<1)return e;var a=String(r).repeat(n);return t<0?e+a:a+e}if(arguments.length<2)return 0===arguments.length?"":r;var a=2===arguments.length&&Array.isArray(arguments[1])?[].concat(_toConsumableArray(arguments[1])):Array.prototype.slice.call(arguments,1);return 0===a.length?r:t.test(r)?(e.lastIndex=0,r.replace(e,function(e,t,r){var i=a[t];if(null==i)return"";for(;"function"==typeof i;)i=i();switch(void 0===i?"undefined":_typeof(i)){case"string":break;case"object":i=JSON.stringify(i);break;default:i=String(i)}return n(i,r?Number.parseInt(r,10):0," ")})):r}})}(),Object.defineProperty(String.prototype,"contains",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.contains called on null or undefined");return-1!==String.prototype.indexOf.apply(this,arguments)}}),Object.defineProperty(String.prototype,"count",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.count called on null or undefined");var e=String(arguments[0]||"");if(""===e)return 0;for(var t=String.prototype.indexOf,r=e.length,n=Number(arguments[1])||0,a=0;-1!==(n=t.call(this,e,n));)++a,n+=r;return a}}),Object.defineProperty(String.prototype,"first",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.first called on null or undefined");return _getCodePointStartAndEnd(String(this),0).char}}),Object.defineProperty(String.prototype,"last",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.last called on null or undefined");var e=String(this);return _getCodePointStartAndEnd(e,e.length-1).char}}),Object.defineProperty(String.prototype,"splice",{configurable:!0,writable:!0,value:function(e,t,r){if(null==this)throw new TypeError("String.prototype.splice called on null or undefined");var n=this.length>>>0;if(0===n)return"";var a=Number(e);Number.isSafeInteger(a)?a<0&&(a+=n)<0&&(a=0):a=0,a>n&&(a=n);var i=Number(t);(!Number.isSafeInteger(i)||i<0)&&(i=0);var o=this.slice(0,a);return void 0!==r&&(o+=r),a+i<n&&(o+=this.slice(a+i)),o}}),Object.defineProperty(String.prototype,"splitOrEmpty",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.splitOrEmpty called on null or undefined");return""===String(this)?[]:String.prototype.split.apply(this,arguments)}}),Object.defineProperty(String.prototype,"toLocaleUpperFirst",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.toLocaleUpperFirst called on null or undefined");var e=String(this),t=_getCodePointStartAndEnd(e,0),r=t.char,n=t.end;return-1===n?"":r.toLocaleUpperCase()+e.slice(n+1)}}),Object.defineProperty(String.prototype,"toUpperFirst",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.toUpperFirst called on null or undefined");var e=String(this),t=_getCodePointStartAndEnd(e,0),r=t.char,n=t.end;return-1===n?"":r.toUpperCase()+e.slice(n+1)}}),Object.defineProperty(Date.prototype,"toJSON",{configurable:!0,writable:!0,value:function(){return["(revive:date)",this.toISOString()]}}),Object.defineProperty(Function.prototype,"toJSON",{configurable:!0,writable:!0,value:function(){return["(revive:eval)","("+this.toString()+")"]}}),Object.defineProperty(Map.prototype,"toJSON",{configurable:!0,writable:!0,value:function(){return["(revive:map)",[].concat(_toConsumableArray(this))]}}),Object.defineProperty(RegExp.prototype,"toJSON",{configurable:!0,writable:!0,value:function(){return["(revive:eval)",this.toString()]}}),Object.defineProperty(Set.prototype,"toJSON",{configurable:!0,writable:!0,value:function(){return["(revive:set)",[].concat(_toConsumableArray(this))]}}),Object.defineProperty(JSON,"reviveWrapper",{configurable:!0,writable:!0,value:function(e,t){if("string"!=typeof e)throw new TypeError("JSON.reviveWrapper code parameter must be a string");return["(revive:eval)",[e,t]]}}),Object.defineProperty(JSON,"_real_parse",{value:JSON.parse}),Object.defineProperty(JSON,"parse",{configurable:!0,writable:!0,value:function value(text,reviver){return JSON._real_parse(text,function(key,val){var value=val;if(Array.isArray(value)&&2===value.length)switch(value[0]){case"(revive:set)":value=new Set(value[1]);break;case"(revive:map)":value=new Map(value[1]);break;case"(revive:date)":value=new Date(value[1]);break;case"(revive:eval)":try{if(Array.isArray(value[1])){var $ReviveData$=value[1][1];value=eval(value[1][0])}else value=eval(value[1])}catch(e){}}else if("string"==typeof value&&"@@revive@@"===value.slice(0,10))try{value=eval(value.slice(10))}catch(e){}if("function"==typeof reviver)try{value=reviver(key,value)}catch(e){}return value})}}),Object.defineProperty(Array.prototype,"contains",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.contains called on null or undefined");return Array.prototype.includes.apply(this,arguments)}}),Object.defineProperty(Array.prototype,"containsAll",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.containsAll called on null or undefined");return Array.prototype.includesAll.apply(this,arguments)}}),Object.defineProperty(Array.prototype,"containsAny",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.containsAny called on null or undefined");return Array.prototype.includesAny.apply(this,arguments)}}),Object.defineProperty(Array.prototype,"flatten",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("Array.prototype.flatten called on null or undefined");return Array.prototype.flat.call(this,1/0)}}),Object.defineProperty(String.prototype,"readBracketedList",{configurable:!0,writable:!0,value:function(){if(null==this)throw new TypeError("String.prototype.readBracketedList called on null or undefined");for(var e=new RegExp("(?:\\[\\[((?:\\s|\\S)*?)\\]\\])|([^\"'\\s]\\S*)","gm"),t=[],r=void 0;null!==(r=e.exec(this));)r[1]?t.push(r[1]):r[2]&&t.push(r[2]);return t}})}();var Browser=function(){var e=navigator.userAgent.toLowerCase(),t=e.includes("windows phone"),r=Object.freeze({Android:!t&&e.includes("android"),BlackBerry:/blackberry|bb10/.test(e),iOS:!t&&/ip(?:hone|ad|od)/.test(e),Opera:!t&&("object"===_typeof(window.operamini)||e.includes("opera mini")),Windows:t||/iemobile|wpdesktop/.test(e),any:function(){return r.Android||r.BlackBerry||r.iOS||r.Opera||r.Windows}}),n=!r.Windows&&!/khtml|trident|edge/.test(e)&&e.includes("gecko"),a=!e.includes("opera")&&/msie|trident/.test(e),i=a?function(){var t=/(?:msie\s+|rv:)(\d+\.\d)/.exec(e);return t?Number(t[1]):0}():null,o=e.includes("opera")||e.includes(" opr/"),s=o?function(){var t=new RegExp((/khtml|chrome/.test(e)?"opr":"version")+"\\/(\\d+\\.\\d+)"),r=t.exec(e);return r?Number(r[1]):0}():null,u=e.includes("vivaldi");return Object.freeze({userAgent:e,isMobile:r,isGecko:n,isIE:a,ieVersion:i,isOpera:o,operaVersion:s,isVivaldi:u})}(),Has=function(){var e=function(){try{return"function"==typeof document.createElement("audio").canPlayType}catch(e){}return!1}(),t=e&&function(){try{var e=document.createElement("audio").play();return e.catch(function(){}),e instanceof Promise}catch(e){}return!1}(),r=function(){try{return"Blob"in window&&"File"in window&&"FileList"in window&&"FileReader"in window&&!Browser.isMobile.any()&&(!Browser.isOpera||Browser.operaVersion>=15)}catch(e){}return!1}(),n=function(){try{return"geolocation"in navigator&&"function"==typeof navigator.geolocation.getCurrentPosition&&"function"==typeof navigator.geolocation.watchPosition}catch(e){}return!1}(),a=function(){try{return"MutationObserver"in window&&"function"==typeof window.MutationObserver}catch(e){}return!1}(),i=function(){try{return"performance"in window&&"function"==typeof window.performance.now}catch(e){}return!1}(),o=function(){try{return"ontouchstart"in window||!!window.DocumentTouch&&document instanceof window.DocumentTouch||!!navigator.maxTouchPoints||!!navigator.msMaxTouchPoints}catch(e){}return!1}(),s=function(){try{for(var e=new Map([["transition","transitionend"],["MSTransition","msTransitionEnd"],["WebkitTransition","webkitTransitionEnd"],["MozTransition","transitionend"]]),t=[].concat(_toConsumableArray(e.keys())),r=document.createElement("div"),n=0;n<t.length;++n)if(r.style[t[n]]!==undefined)return e.get(t[n])}catch(e){}return!1}();return Object.freeze({audio:e,audioPromise:t,fileAPI:r,geolocation:n,mutationObserver:a,performance:i,touch:o,transitionEndEvent:s})}(),Visibility=function(){function e(){return Boolean(r&&document[r.hiddenProperty])}function t(){return r&&document[r.stateProperty]||"visible"}var r=function(){try{return Object.freeze([{hiddenProperty:"hidden",stateProperty:"visibilityState",changeEvent:"visibilitychange"},{hiddenProperty:"webkitHidden",stateProperty:"webkitVisibilityState",changeEvent:"webkitvisibilitychange"},{hiddenProperty:"mozHidden",stateProperty:"mozVisibilityState",changeEvent:"mozvisibilitychange"},{hiddenProperty:"msHidden",stateProperty:"msVisibilityState",changeEvent:"msvisibilitychange"}].find(function(e){return e.hiddenProperty in document}))}catch(e){}return null}();return Object.freeze(Object.defineProperties({},{isHidden:{value:e},state:{value:t},hiddenProperty:{value:r.hiddenProperty},stateProperty:{value:r.stateProperty},changeEvent:{value:r.changeEvent}}))}(),_ref3=function(){function e(t){if("object"!==(void 0===t?"undefined":_typeof(t))||null===t)return t;if(t instanceof String)return String(t);if(t instanceof Number)return Number(t);if(t instanceof Boolean)return Boolean(t);if("function"==typeof t.clone)return t.clone(!0);if(t.nodeType&&"function"==typeof t.cloneNode)return t.cloneNode(!0);var r=void 0;return t instanceof Array?r=new Array(t.length):t instanceof Date?r=new Date(t.getTime()):t instanceof Map?(r=new Map,t.forEach(function(t,n){return r.set(n,e(t))})):t instanceof RegExp?r=new RegExp(t):t instanceof Set?(r=new Set,t.forEach(function(t){return r.add(e(t))})):r=Object.create(Object.getPrototypeOf(t)),Object.keys(t).forEach(function(n){return r[n]=e(t[n])}),r}function t(e){for(var t=document.createDocumentFragment(),r=document.createElement("p"),n=void 0;null!==(n=e.firstChild);){if(n.nodeType===Node.ELEMENT_NODE){switch(n.nodeName.toUpperCase()){case"BR":if(null!==n.nextSibling&&n.nextSibling.nodeType===Node.ELEMENT_NODE&&"BR"===n.nextSibling.nodeName.toUpperCase()){e.removeChild(n.nextSibling),e.removeChild(n),t.appendChild(r),r=document.createElement("p");continue}if(!r.hasChildNodes()){e.removeChild(n);continue}break;case"ADDRESS":case"ARTICLE":case"ASIDE":case"BLOCKQUOTE":case"CENTER":case"DIV":case"DL":case"FIGURE":case"FOOTER":case"FORM":case"H1":case"H2":case"H3":case"H4":case"H5":case"H6":case"HEADER":case"HR":case"MAIN":case"NAV":case"OL":case"P":case"PRE":case"SECTION":case"TABLE":case"UL":r.hasChildNodes()&&(t.appendChild(r),r=document.createElement("p")),t.appendChild(n);continue}}r.appendChild(n)}r.hasChildNodes()&&t.appendChild(r),e.appendChild(t)}function r(){try{return document.activeElement||null}catch(e){return null}}function n(e,t,r){var n="object"===(void 0===e?"undefined":_typeof(e))?e:document.getElementById(e);if(null==n)return null;var a=Array.isArray(t)?t:[t];jQuery(n).empty();for(var i=0,o=a.length;i<o;++i)if(Story.has(a[i]))return new Wikifier(n,Story.get(a[i]).processText().trim()),n;if(null!=r){var s=String(r).trim();""!==s&&new Wikifier(n,s)}return n}function a(e,t,r){var n=jQuery(document.createElement("div")),a=jQuery(document.createElement("button")),i=jQuery(document.createElement("pre")),o=L10n.get("errorTitle")+": "+(t||"unknown error");return a.addClass("error-toggle").ariaClick({label:L10n.get("errorToggle")},function(){a.hasClass("enabled")?(a.removeClass("enabled"),i.attr({"aria-hidden":!0,hidden:"hidden"})):(a.addClass("enabled"),i.removeAttr("aria-hidden hidden"))}).appendTo(n),jQuery(document.createElement("span")).addClass("error").text(o).appendTo(n),jQuery(document.createElement("code")).text(r).appendTo(i),i.addClass("error-source").attr({"aria-hidden":!0,hidden:"hidden"}).appendTo(n),n.addClass("error-view").appendTo(e),console.warn(o+"\n\t"+r.replace(/\n/g,"\n\t")),!1}function i(e,t){var r=i;switch(void 0===e?"undefined":_typeof(e)){case"number":if(Number.isNaN(e))return t;break;case"object":if(null===e)return t;if(Array.isArray(e))return e.map(function(e){return r(e,t)}).join(", ");if(e instanceof Set)return[].concat(_toConsumableArray(e)).map(function(e){return r(e,t)}).join(", ");if(e instanceof Map){return"{ "+[].concat(_toConsumableArray(e)).map(function(e){var n=_slicedToArray(e,2),a=n[0],i=n[1];return r(a,t)+" → "+r(i,t)}).join(", ")+" }"}return e instanceof Date?e.toLocaleString():"function"==typeof e.toString?e.toString():Object.prototype.toString.call(e);case"function":case"undefined":return t}return String(e)}return Object.freeze(Object.defineProperties({},{clone:{value:e},convertBreaks:{value:t},safeActiveElement:{value:r},setPageElement:{value:n},throwError:{value:a},toStringOrDefault:{value:i}}))

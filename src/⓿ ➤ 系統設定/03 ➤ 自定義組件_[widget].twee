@@ -1,25 +1,16 @@
 :: widget_Time [widget]
 
 /* 顯示時間組件 */
-/* 格式：第1年 8月31日 07:00 星期日 */
 <<widget "Time_Display">>
-    /* 年份計算：當前年份 - 起始年份 + 1 */
     <<set _yearStr to "第" + ($gameDate.getFullYear() - $startYear + 1) + "年">>
-    
-    /* 日期與時間格式化 */
     <<set _dateStr to ($gameDate.getMonth() + 1) + "月" + $gameDate.getDate() + "日">>
     <<set _timeStr to $gameDate.getHours().toString().padStart(2, "0") + ":" + $gameDate.getMinutes().toString().padStart(2, "0")>>
-    
-    /* 星期計算 */
     <<set _weekList to ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]>>
     <<set _weekStr to _weekList[$gameDate.getDay()]>>
-
-    /* 組合輸出 */
     <<print _yearStr + " " + _dateStr + " " + _timeStr + " " + _weekStr>>
 <</widget>>
 
 /* 時間流逝組件 */
-/* 用法：<<時間流逝 60>> 代表主角主觀經歷了 60 分鐘 */
 <<widget "Time_Over">>
     <<set _minutes to $args[0] || 0>>
     <<set $gameDate.setMinutes($gameDate.getMinutes() + _minutes)>>
@@ -27,33 +18,54 @@
 
 :: widget_AI [widget]
 
-/* === AI 數據接收器 widget === */
+/* === AI 數據接收器 widget (修復版) === */
 <<widget "parse_ai_data">>
     <<script>>
-        // 1. 取得傳入的參數 (AI 的整段回覆)
-        var ai_text = State.variables.args[0];
-        
-        // 2. 定義標記
-        var start_tag = ":::TWINE_DATA";
-        var end_tag = ":::";
-        
-        // 3. 尋找並擷取數據塊
-        var start_index = ai_text.indexOf(start_tag);
-        
-        if (start_index !== -1) {
-            // 找出數據塊的結尾位置
-            // 注意：我們要從 start_index 之後開始找結尾
-            var end_index = ai_text.indexOf(end_tag, start_index + start_tag.length);
+        // 取得輸入資料
+        var ai_input = State.variables.args[0];
+
+        // 【修復點】：使用 if 包裹整個邏輯，而不是用 return 退出
+        if (ai_input) {
             
-            if (end_index !== -1) {
-                //擷取純代碼部分
-                var data_block = ai_text.substring(start_index + start_tag.length, end_index);
-                
-                // 4. 執行代碼 (將字串轉為 Twine 指令)
-                new Wikifier(null, data_block);
-                
-                console.log("Twine Data Parsed Successfully!");
+            var ai_text = ai_input;
+            
+            // 2. 定義標記
+            var start_tag = ":::TWINE_DATA";
+            var end_tag = ":::";
+    
+            // 3. 尋找數據塊的位置
+            var start_index = ai_text.indexOf(start_tag);
+    
+            if (start_index !== -1) {
+                // A. 提取並顯示數據塊"之前"的劇情文本 (去除前後空白)
+                var narrative_text = ai_text.substring(0, start_index).trim();
+                State.variables.ai_last_narrative = narrative_text;
+    
+                // B. 處理數據塊
+                var end_index = ai_text.indexOf(end_tag, start_index + start_tag.length);
+                if (end_index !== -1) {
+                    var data_block = ai_text.substring(start_index + start_tag.length, end_index);
+                    // 執行數據代碼
+                    try {
+                        new Wikifier(null, data_block);
+                        console.log("Twine Data Parsed Successfully!");
+                    } catch (e) {
+                        console.error("Error executing Twine data block:", e);
+                    }
+                }
+            } else {
+                // 如果沒有數據塊，假設整段都是劇情
+                State.variables.ai_last_narrative = ai_text;
             }
+
+        } else {
+            // 如果沒收到資料，印出日誌但不報錯
+            console.log("parse_ai_data: No data received.");
         }
     <</script>>
+    
+    /* 直接在畫面上印出劇情 */
+    <<if $ai_last_narrative>>
+        <<print $ai_last_narrative>>
+    <</if>>
 <</widget>>

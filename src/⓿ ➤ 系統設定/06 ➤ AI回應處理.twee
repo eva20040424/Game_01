@@ -1,0 +1,30 @@
+:: Action_Handler
+
+/* 這裡是後台處理區 */
+
+/* 1. 抓取當前時間，證明畫面有刷新 */
+<<set _time to new Date().toTimeString().slice(0, 8)>>
+
+/* 2. 模擬 AI 回應 (使用 + 號來連接變數，這樣你才看得到變數的內容) */
+<<set _mock_response to `
+【模擬 AI 回應】
+現在時間：` + _time + `
+AI 已經收到你的行動：『 ` + $player_act + ` 』
+
+隨即，場景發生了變化... (這是第 ` + random(1, 100) + ` 次變數測試)
+
+[[測試：繼續觀察->Action_Handler][$player_act = "繼續觀察"]]
+[[測試：嘗試觸摸->Action_Handler][$player_act = "嘗試觸摸"]]
+[[測試：大吼大叫->Action_Handler][$player_act = "大吼大叫"]]
+
+ :::TWINE_DATA
+<<set $sys_bladder_ml to $sys_bladder_ml + 50>>
+ :::
+`>>
+
+/* 3. 呼叫組件解析 */
+<<if _mock_response>>
+    <<parse_ai_data _mock_response>>
+<<else>>
+    錯誤：模擬數據設定失敗。
+<</if>>
