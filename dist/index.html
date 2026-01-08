@@ -497,36 +497,87 @@ At the very END, append the data block.
         &lt;/div&gt;
     &lt;/details&gt;
 
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="5" name="Action_Handler" tags="" position="600,100" size="100,100">/* 這裡是後台處理區 */
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="5" name="Action_Handler" tags="" position="600,100" size="100,100">/* 狀態顯示區 */
+&lt;div id=&quot;ai-status&quot; style=&quot;text-align:center; padding: 20px; color: cyan; border: 1px dashed #444; margin: 10px;&quot;&gt;
+    正在呼叫 Google 大腦... &lt;br&gt;
+    &lt;span class=&quot;spinner&quot;&gt;💫&lt;/span&gt; 使用模型：&lt;&lt;print $aiModel&gt;&gt;
+&lt;/div&gt;
 
-========= 系統運算中 =========
+/* 內容顯示區：AI 的故事會出現在這裡 */
+&lt;div id=&quot;ai-content&quot;&gt;&lt;/div&gt;
 
-/* 1. 抓取當前時間，證明畫面有刷新 */
-&lt;&lt;set _time to new Date().toTimeString().slice(0, 8)&gt;&gt;
+/* 錯誤日誌區 */
+&lt;div id=&quot;ai-debug&quot; style=&quot;display:none; color: red; background: #220000; padding: 10px; border: 1px solid red; margin-top: 20px;&quot;&gt;&lt;/div&gt;
 
-/* 2. 模擬 AI 回應 (使用 + 號來連接變數，這樣你才看得到變數的內容) */
-&lt;&lt;set _mock_response to `
-【模擬 AI 回應】
-現在時間：` + _time + `
-AI 已經收到你的行動：『 ` + $player_act + ` 』
+&lt;&lt;script&gt;&gt;
+    // 1. 設定參數
+    var apiKey = State.variables.apiKey;
+    var model = State.variables.aiModel || &quot;gemini-3-flash-preview&quot;;
 
-隨即，場景發生了變化... (這是第 ` + random(1, 100) + ` 次變數測試)
+    // 檢查 Key
+    if (!apiKey || apiKey === &quot;&quot;) {
+        $(&quot;#ai-status&quot;).html(&quot;❌ 錯誤：尚未輸入 API Key！請返回【初始設定】頁面填寫。&quot;);
+    } else {
 
-[[測試：繼續觀察-&gt;Action_Handler][$player_act = &quot;繼續觀察&quot;]]
-[[測試：嘗試觸摸-&gt;Action_Handler][$player_act = &quot;嘗試觸摸&quot;]]
-[[測試：大吼大叫-&gt;Action_Handler][$player_act = &quot;大吼大叫&quot;]]
+        // 2. 準備網址
+        var url = &quot;https://generativelanguage.googleapis.com/v1beta/models/&quot; + model + &quot;:generateContent?key=&quot; + apiKey;
 
- :::TWINE_DATA
-&lt;&lt;set $sys_bladder_ml to $sys_bladder_ml + 50&gt;&gt;
- :::
-`&gt;&gt;
+        // 3. 準備提示詞
+        var basePrompt = setup.ai_prompt; 
+        var userSystemSetting = State.variables.systemPrompt || &quot;&quot;;
+        var lastContext = State.variables.ai_last_narrative || &quot;（故事開始）&quot;;
+        var playerAction = State.variables.player_act || &quot;玩家進入了場景&quot;;
+        
+        var finalPrompt = basePrompt + &quot;\n&quot; + 
+                          &quot;[User Extra Settings]: &quot; + userSystemSetting + &quot;\n\n&quot; + 
+                          &quot;【Current Story Context】: &quot; + lastContext + &quot;\n\n&quot; + 
+                          &quot;【Player Current Action】: &quot; + playerAction;
 
-/* 3. 呼叫組件解析 */
-&lt;&lt;if _mock_response&gt;&gt;
-    &lt;&lt;parse_ai_data _mock_response&gt;&gt;
-&lt;&lt;else&gt;&gt;
-    錯誤：模擬數據設定失敗。
-&lt;&lt;/if&gt;&gt;</tw-passagedata><tw-passagedata pid="6" name="Start" tags="" position="725,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
+        // 4. 發送請求
+        fetch(url, {
+            method: &quot;POST&quot;,
+            headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+            body: JSON.stringify({ contents: [{ parts: [{ text: finalPrompt }] }] })
+        })
+        .then(response =&gt; {
+            if (!response.ok) {
+                return response.json().then(err =&gt; { throw new Error(err.error.message); });
+            }
+            return response.json();
+        })
+        .then(data =&gt; {
+            // 5. 接收資料處理
+            try {
+                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                    throw new Error(&quot;AI 拒絕生成內容（可能是安全過濾或無內容）。&quot;);
+                }
+
+                var ai_text = data.candidates[0].content.parts[0].text;
+                
+                // 存入臨時變數
+                State.variables.temp_ai_response = ai_text;
+
+                // 更新狀態
+                $(&quot;#ai-status&quot;).html(&quot;✅ 接收成功，正在渲染...&quot;);
+                $(&quot;#ai-status&quot;).fadeOut(500); 
+
+                // 【關鍵修復點】：使用 document.getElementById 抓取真正的網頁元素
+                var contentBox = document.getElementById(&quot;ai-content&quot;);
+                new Wikifier(contentBox, &quot;&lt;&lt;parse_ai_data $temp_ai_response&gt;&gt;&quot;);
+                
+            } catch (e) {
+                console.error(e);
+                $(&quot;#ai-status&quot;).html(&quot;⚠️ 解析錯誤&quot;);
+                $(&quot;#ai-debug&quot;).show().html(&quot;&lt;b&gt;程式運作錯誤：&lt;/b&gt;&lt;br&gt;&quot; + e.message + &quot;&lt;br&gt;&lt;br&gt;&lt;b&gt;原始回傳資料：&lt;/b&gt;&lt;br&gt;&quot; + JSON.stringify(data));
+            }
+        })
+        .catch(error =&gt; {
+            console.error(&quot;Error:&quot;, error);
+            $(&quot;#ai-status&quot;).html(&quot;❌ 連線錯誤&quot;);
+            $(&quot;#ai-debug&quot;).show().html(&quot;&lt;b&gt;連線失敗原因：&lt;/b&gt;&lt;br&gt;&quot; + error.message);
+        });
+    }
+&lt;&lt;/script&gt;&gt;</tw-passagedata><tw-passagedata pid="6" name="Start" tags="" position="725,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
 &lt;div style=&quot;text-align: center; margin-top: 5%;&quot;&gt;
     &lt;h1&gt;✦ 初始設定 ✦&lt;/h1&gt;
     &lt;hr style=&quot;width: 50%; border-color: #ff69b4;&quot;&gt;
@@ -607,6 +658,7 @@ AI 已經收到你的行動：『 ` + $player_act + ` 』
     /* 按鈕：前往下一個場景 */
 歡迎來到測試房。
 [[開始 AI 互動-&gt;Action_Handler][$player_act = &quot;玩家醒來，觀察四周&quot;]]
+[[測試真假-&gt;Action_Handler][$player_act = &quot;請告訴我 123 乘以 456 等於多少&quot;]]
 
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="7" name="💠開門💠" tags="" position="850,100" size="100,100">宇宙諸界，隨心遨遊。
 今欲往？

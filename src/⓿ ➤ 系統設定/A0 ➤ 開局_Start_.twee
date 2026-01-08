@@ -80,5 +80,6 @@
     /* 按鈕：前往下一個場景 */
 歡迎來到測試房。
 [[開始 AI 互動->Action_Handler][$player_act = "玩家醒來，觀察四周"]]
+[[測試真假->Action_Handler][$player_act = "請告訴我 123 乘以 456 等於多少"]]
 
 </div>
