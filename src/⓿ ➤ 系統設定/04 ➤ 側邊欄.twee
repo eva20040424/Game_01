@@ -86,33 +86,12 @@
 
     <hr style="border-color: #444; margin: 10px 0;">
 
+<hr style="border-color: #444; margin: 10px 0;">
+
+    /* --- 新增：圖書館摺疊選單 --- */
     <details>
-        <summary>🤖 AI 同步接口</summary>
-        <div style="margin-top: 5px; font-size: 0.8em; color: #888;">
-            請將 AI 回覆貼入下方：
-        </div>
-        <<textbox "$temp_ai_input" "" autofocus>>
-        <<script>>
-            $(document).on('input', 'input[name="textbox-temp_ai_input"]', function() {
-                var $input = $(this);
-                var text = $input.val();
-                if (text.includes(":::TWINE_DATA")) {
-                    var safeText = text.replace(/"/g, '\\"');
-                    $.wiki('<<parse_ai_data "' + safeText + '">>');
-                    $input.val("✅ 狀態已同步！");
-                    setTimeout(function() { 
-                        $input.val(""); 
-                        Engine.show(); 
-                    }, 1000);
-                }
-            });
-        <</script>>
-        <div style="margin-top:5px;">
-           <<button "📋 複製 Prompt">>
-               <<run navigator.clipboard.writeText(setup.ai_prompt)>>
-               <<run alert("指令已複製！")>>
-           <</button>>
-        </div>
+        <summary>📚 圖書管理 (Library)</summary>
+        <<library_panel>>
     </details>
 
 </div>

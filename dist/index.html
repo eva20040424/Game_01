@@ -100,7 +100,7 @@ var saveAs=saveAs||navigator.msSaveBlob&&navigator.msSaveBlob.bind(navigator)||f
 		<div id="init-lacking">Your browser lacks required capabilities. Please upgrade it or switch to another to continue.</div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://A1B2C3D4-E5F6-4000-8000-000000000001// --><tw-storydata name="慾門" startnode="6" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="A1B2C3D4-E5F6-4000-8000-000000000001" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* === 狀態欄主容器 === */
+	<!-- UUID://A1B2C3D4-E5F6-4000-8000-000000000001// --><tw-storydata name="慾門" startnode="7" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="A1B2C3D4-E5F6-4000-8000-000000000001" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* === 狀態欄主容器 === */
 #status-panel {
     font-family: "Consolas", "Monaco", "Courier New", monospace;
     font-size: 0.9em;
@@ -260,6 +260,18 @@ details[open] summary::before {
     font-size: 1.1em;
     letter-spacing: 1px;
     box-shadow: inset 0 0 10px rgba(0, 170, 255, 0.2);
+}
+
+.delete-btn {
+    cursor: pointer;
+    font-size: 0.8em;
+    opacity: 0.5;
+    margin-right: 5px;
+    text-decoration: none !important;
+}
+.delete-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
 }</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "AI_System_Prompt_Init" */
 setup.ai_prompt = `
 [SYSTEM INSTRUCTION: TWINE_INTERACTIVE_MODE]
@@ -347,7 +359,22 @@ setup.lore["隨身空間"] = `
     /* 如果倉庫還沒蓋好，就蓋一個空的；如果已經由其他檔案蓋好了，就保留原狀 */
     setup.chars = setup.chars || {};
     setup.lore = setup.lore || {};
-&lt;&lt;/script&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="widget_Time" tags="widget" position="225,100" size="100,100">/* 顯示時間組件 */
+&lt;&lt;/script&gt;&gt;
+
+/* --- 6. 圖書管理系統初始化 (包含風格預設) --- */
+&lt;&lt;set $custom_chars to recall(&quot;custom_chars&quot;, {})&gt;&gt;
+&lt;&lt;set $custom_lore to recall(&quot;custom_lore&quot;, {})&gt;&gt;
+&lt;&lt;set $custom_presets to recall(&quot;custom_presets&quot;, {})&gt;&gt;
+
+/* 當前掛載列表 */
+&lt;&lt;set $active_char_ids to [&quot;恬羽&quot;]&gt;&gt;
+&lt;&lt;set $active_world_ids to [&quot;隨身空間&quot;]&gt;&gt;
+&lt;&lt;set $active_preset_id to recall(&quot;active_preset_id&quot;, &quot;系統原廠&quot;)&gt;&gt;
+
+/* 強制鎖定膀胱下限 */
+&lt;&lt;if $sys_bladder_ml &lt; 2000&gt;&gt;
+    &lt;&lt;set $sys_bladder_ml to 2000&gt;&gt;
+&lt;&lt;/if&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="widget_Time" tags="widget" position="225,100" size="100,100">/* 顯示時間組件 */
 &lt;&lt;widget &quot;Time_Display&quot;&gt;&gt;
     &lt;&lt;set _yearStr to &quot;第&quot; + ($gameDate.getFullYear() - $startYear + 1) + &quot;年&quot;&gt;&gt;
     &lt;&lt;set _dateStr to ($gameDate.getMonth() + 1) + &quot;月&quot; + $gameDate.getDate() + &quot;日&quot;&gt;&gt;
@@ -498,37 +525,16 @@ setup.lore["隨身空間"] = `
 
     &lt;hr style=&quot;border-color: #444; margin: 10px 0;&quot;&gt;
 
+&lt;hr style=&quot;border-color: #444; margin: 10px 0;&quot;&gt;
+
+    /* --- 新增：圖書館摺疊選單 --- */
     &lt;details&gt;
-        &lt;summary&gt;🤖 AI 同步接口&lt;/summary&gt;
-        &lt;div style=&quot;margin-top: 5px; font-size: 0.8em; color: #888;&quot;&gt;
-            請將 AI 回覆貼入下方：
-        &lt;/div&gt;
-        &lt;&lt;textbox &quot;$temp_ai_input&quot; &quot;&quot; autofocus&gt;&gt;
-        &lt;&lt;script&gt;&gt;
-            $(document).on(&#39;input&#39;, &#39;input[name=&quot;textbox-temp_ai_input&quot;]&#39;, function() {
-                var $input = $(this);
-                var text = $input.val();
-                if (text.includes(&quot;:::TWINE_DATA&quot;)) {
-                    var safeText = text.replace(/&quot;/g, &#39;\\&quot;&#39;);
-                    $.wiki(&#39;&lt;&lt;parse_ai_data &quot;&#39; + safeText + &#39;&quot;&gt;&gt;&#39;);
-                    $input.val(&quot;✅ 狀態已同步！&quot;);
-                    setTimeout(function() { 
-                        $input.val(&quot;&quot;); 
-                        Engine.show(); 
-                    }, 1000);
-                }
-            });
-        &lt;&lt;/script&gt;&gt;
-        &lt;div style=&quot;margin-top:5px;&quot;&gt;
-           &lt;&lt;button &quot;📋 複製 Prompt&quot;&gt;&gt;
-               &lt;&lt;run navigator.clipboard.writeText(setup.ai_prompt)&gt;&gt;
-               &lt;&lt;run alert(&quot;指令已複製！&quot;)&gt;&gt;
-           &lt;&lt;/button&gt;&gt;
-        &lt;/div&gt;
+        &lt;summary&gt;📚 圖書管理 (Library)&lt;/summary&gt;
+        &lt;&lt;library_panel&gt;&gt;
     &lt;/details&gt;
 
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="5" name="Action_Handler" tags="" position="600,100" size="100,100">&lt;div id=&quot;ai-status&quot; style=&quot;text-align:center; padding: 20px; color: cyan; border: 1px dashed #444; margin: 10px;&quot;&gt;
-    正在呼叫 Google 大腦... &lt;br&gt;
+    AI生成中... &lt;br&gt;
     &lt;span class=&quot;spinner&quot;&gt;💫&lt;/span&gt; 使用模型：&lt;&lt;print $aiModel&gt;&gt;
 &lt;/div&gt;
 
@@ -556,35 +562,96 @@ setup.lore["隨身空間"] = `
     } else {
         var url = &quot;https://generativelanguage.googleapis.com/v1beta/models/&quot; + model + &quot;:generateContent?key=&quot; + apiKey;
 
-        /* === 1. 組合提示詞積木 === */
+       /* === 1. 組合提示詞積木 === */
         
-        // A. 系統基礎指令
-        var basePrompt = setup.ai_prompt; 
-        
-        // B. 讀取當前啟用的「世界書」 (預設使用 &#39;通用規則&#39;，除非有指定)
-        var activeWorldId = State.variables.active_world_id || &quot;通用規則&quot;;
-        var worldInfo = setup.lore[activeWorldId] ? &quot;[WORLD SETTING]:\n&quot; + setup.lore[activeWorldId] : &quot;&quot;;
+        // A. 系統基礎指令 (Style / System Prompt)
+        var basePrompt = &quot;&quot;;
+        var currentPresetId = State.variables.active_preset_id; 
+        var presetObj = State.variables.custom_presets[currentPresetId];
 
-        // C. 讀取當前啟用的「角色卡」
-        var activeCharId = State.variables.active_char_id;
-        var charInfo = &quot;&quot;;
-        if (activeCharId &amp;&amp; setup.chars[activeCharId]) {
-            charInfo = &quot;[CHARACTER CARD]:\n&quot; + setup.chars[activeCharId];
+        if (!presetObj || currentPresetId === &quot;系統原廠&quot;) {
+            // 情況 1：使用系統原廠
+            basePrompt = setup.ai_prompt;
+        } else if (presetObj.type === &#39;simple&#39;) {
+            // 情況 2：使用舊版簡單預設 (只有一段字)
+            basePrompt = presetObj.data;
+        } else if (presetObj.type === &#39;advanced&#39;) {
+            // 情況 3：✨ 使用酒館複雜預設 (積木組合) ✨
+            // 遍歷所有模組，只把 enabled = true 的拼起來
+            var promptParts = [];
+            presetObj.data.forEach(function(block) {
+                if (block.enabled) {
+                    promptParts.push(block.content);
+                }
+            });
+            basePrompt = promptParts.join(&quot;\n\n&quot;);
         }
+        
+        console.log(&quot;🔥 Prompt 組合完成，來源：&quot;, currentPresetId);
 
-        // D. 其他動態資訊
-        var userSystemSetting = State.variables.systemPrompt || &quot;&quot;;
+        // B. 世界觀 (Lore)
+        var worldIds = [];
+        if (State.variables.active_world_ids) worldIds = worldIds.concat(State.variables.active_world_ids);
+        if (State.variables.active_world_id) worldIds.push(State.variables.active_world_id);
+        if (worldIds.length === 0) worldIds.push(&quot;通用規則&quot;);
+
+        var worldInfo = &quot;&quot;;
+        [...new Set(worldIds)].forEach(function(id) {
+            var content = State.variables.custom_lore[id] || setup.lore[id];
+            if (content) worldInfo += &quot;### [WORLD SETTING - &quot; + id + &quot;]:\n&quot; + content + &quot;\n\n&quot;;
+        });
+
+        // C. 角色書 (Character) - 分離 NPC 與 主角
+        var charIds = [];
+        if (State.variables.active_char_ids) charIds = charIds.concat(State.variables.active_char_ids);
+        if (State.variables.active_char_id) charIds.push(State.variables.active_char_id);
+
+        var npcInfo = &quot;&quot;;
+        var playerInfo = &quot;&quot;;
+        var playerName = State.variables.name;
+
+        [...new Set(charIds)].forEach(function(id) {
+            var content = State.variables.custom_chars[id] || setup.chars[id];
+            if (content) {
+                if (id === playerName) {
+                    // 主角：這裡先不放內容，我們留到最後放，利用「近因效應」增強記憶
+                    playerInfo = content; 
+                } else {
+                    npcInfo += &quot;### [NPC CHARACTER - &quot; + id + &quot;]:\n&quot; + content + &quot;\n\n&quot;;
+                }
+            }
+        });
+
+        // D. 生理數據與動態
+        var statusPrompt = &quot;【Current Physiological Data】:\n&quot; +
+                           &quot;- Bladder Volume: &quot; + State.variables.sys_bladder_ml + &quot;ml (&quot; + State.variables.sys_bladder_state + &quot;)\n&quot; +
+                           &quot;- Womb State: &quot; + (State.variables.sys_womb_state || &quot;Normal&quot;) + &quot;\n&quot;;
+
         var lastContext = State.variables.ai_last_narrative || &quot;（故事開始）&quot;;
         var playerAction = State.variables.player_act || &quot;玩家進入了場景&quot;;
-        
-        // E. 最終合體！
-        // 順序：系統指令 -&gt; 世界觀 -&gt; 角色卡 -&gt; 上下文 -&gt; 玩家動作
+        var userSystemSetting = State.variables.systemPrompt || &quot;&quot;;
+
+        // E. 最終合體！ (順序調整：世界 -&gt; NPC -&gt; 數據 -&gt; 主角設定(強調) -&gt; 上下文)
         var finalPrompt = basePrompt + &quot;\n\n&quot; + 
                           worldInfo + &quot;\n\n&quot; + 
-                          charInfo + &quot;\n\n&quot; + 
+                          npcInfo + &quot;\n\n&quot; + 
+                          statusPrompt + &quot;\n\n&quot; +
+                          
+                          // ✨ 重點：把主角設定放在數據後面，並加上絕對指令 ✨
+                          &quot;### [PLAYER AVATAR / MAIN CHARACTER - &quot; + playerName + &quot;]:\n&quot; +
+                          &quot;The user plays as &quot; + playerName + &quot;. \n&quot; +
+                          &quot;⚠️ CRITICAL INSTRUCTION: You must strictly adhere to the character&#39;s physical limitations and special traits defined below.\n&quot; +
+                          &quot;If the character setting specifies a &#39;minimum limit&#39; (e.g., bladder capacity locked at 2000ml), treat it as an ABSOLUTE LAW. Override any conflicting physiological data if necessary.\n&quot; +
+                          playerInfo + &quot;\n\n&quot; + 
+                          
                           &quot;[User Extra Settings]: &quot; + userSystemSetting + &quot;\n\n&quot; + 
                           &quot;【Current Story Context】: &quot; + lastContext + &quot;\n\n&quot; + 
                           &quot;【Player Current Action】: &quot; + playerAction;
+
+        /* === Debug: 在主控台印出提示詞 (按 F12 可看) === */
+        console.log(&quot;=== FINAL PROMPT SENT TO AI ===&quot;);
+        console.log(finalPrompt);
+        /* ========================================= */
 
         /* === 2. 發送請求 === */
         fetch(url, {
@@ -593,39 +660,290 @@ setup.lore["隨身空間"] = `
             body: JSON.stringify({ contents: [{ parts: [{ text: finalPrompt }] }] })
         })
         .then(response =&gt; {
-            if (!response.ok) {
-                return response.json().then(err =&gt; { throw new Error(err.error.message); });
-            }
+            if (!response.ok) return response.json().then(err =&gt; { throw new Error(err.error.message); });
             return response.json();
         })
         .then(data =&gt; {
-            try {
-                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-                    throw new Error(&quot;AI 拒絕生成內容。&quot;);
-                }
+            if (!data.candidates || !data.candidates[0].content) throw new Error(&quot;AI 拒絕生成內容。&quot;);
+            
+            var ai_text = data.candidates[0].content.parts[0].text;
+            State.variables.temp_ai_response = ai_text;
 
-                var ai_text = data.candidates[0].content.parts[0].text;
-                State.variables.temp_ai_response = ai_text;
+            $(&quot;#ai-status&quot;).html(&quot;✅ 接收成功，正在渲染...&quot;);
+            $(&quot;#ai-status&quot;).fadeOut(500); 
 
-                $(&quot;#ai-status&quot;).html(&quot;✅ 接收成功，正在渲染...&quot;);
-                $(&quot;#ai-status&quot;).fadeOut(500); 
-
-                var contentBox = document.getElementById(&quot;ai-content&quot;);
-                new Wikifier(contentBox, &quot;&lt;&lt;parse_ai_data $temp_ai_response&gt;&gt;&quot;);
-                
-            } catch (e) {
-                console.error(e);
-                $(&quot;#ai-status&quot;).html(&quot;⚠️ 解析錯誤&quot;);
-                $(&quot;#ai-debug&quot;).show().html(&quot;&lt;b&gt;程式運作錯誤：&lt;/b&gt;&lt;br&gt;&quot; + e.message);
-            }
+            var contentBox = document.getElementById(&quot;ai-content&quot;);
+            new Wikifier(contentBox, &quot;&lt;&lt;parse_ai_data $temp_ai_response&gt;&gt;&quot;);
         })
         .catch(error =&gt; {
-            console.error(&quot;Error:&quot;, error);
+            console.error(e);
             $(&quot;#ai-status&quot;).html(&quot;❌ 連線錯誤&quot;);
             $(&quot;#ai-debug&quot;).show().html(&quot;&lt;b&gt;連線失敗原因：&lt;/b&gt;&lt;br&gt;&quot; + error.message);
         });
     }
-&lt;&lt;/script&gt;&gt;</tw-passagedata><tw-passagedata pid="6" name="Start" tags="" position="725,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
+&lt;&lt;/script&gt;&gt;</tw-passagedata><tw-passagedata pid="6" name="widget_Library" tags="widget" position="725,100" size="100,100">/* === 核心：Javascript 處理區 (支援酒館複雜預設) === */
+&lt;&lt;script&gt;&gt;
+    /* 1. 檔案匯入處理 */
+    window.loadTavernFile = function(input, type) {
+        if (!input.files || !input.files[0]) return;
+        var file = input.files[0];
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+            var content = e.target.result;
+            try {
+                var data = JSON.parse(content);
+                // 兼容 V2
+                if (data.spec === &#39;chara_card_v2&#39; &amp;&amp; data.data) data = data.data;
+
+                var name = data.name || (file.name.replace(/\.[^/.]+$/, &quot;&quot;)) || &quot;未命名&quot;; 
+
+                // === A. 角色書 ===
+                if (type === &#39;char&#39;) {
+                    var formattedText = &quot;【角色名稱】：&quot; + name + &quot;\n&quot;;
+                    if (data.entries) { 
+                        formattedText += &quot;【詳細設定集成】 (Source: Lorebook):\n&quot;;
+                        Object.values(data.entries).forEach(entry =&gt; {
+                            if(entry.content &amp;&amp; entry.enabled !== false) {
+                                var keys = (entry.key || []).join(&#39;, &#39;);
+                                if (keys.includes(&quot;權能&quot;) || keys.includes(&quot;天賦&quot;) || keys.includes(&quot;鎖定&quot;)) {
+                                    formattedText += &quot;🔴 [IMPORTANT]: &quot; + keys + &quot;\n&quot;;
+                                } else {
+                                    formattedText += &quot;--- [&quot; + keys + &quot;] ---\n&quot;;
+                                }
+                                formattedText += entry.content + &quot;\n\n&quot;;
+                            }
+                        });
+                    } else {
+                        if(data.description) formattedText += &quot;【描述】：&quot; + data.description + &quot;\n&quot;;
+                        if(data.personality) formattedText += &quot;【性格】：&quot; + data.personality + &quot;\n&quot;;
+                        if(data.first_mes) formattedText += &quot;【開場白】：&quot; + data.first_mes + &quot;\n&quot;;
+                    }
+                    State.variables.custom_chars[name] = formattedText;
+                    if(!State.variables.active_char_ids.includes(name)) State.variables.active_char_ids.push(name);
+                    memorize(&quot;custom_chars&quot;, State.variables.custom_chars);
+                } 
+                // === B. 世界書 ===
+                else if (type === &#39;lore&#39;) {
+                    var formattedText = &quot;【世界觀】：&quot; + name + &quot;\n&quot;;
+                    if (data.entries) {
+                        Object.values(data.entries).forEach(entry =&gt; {
+                            if(entry.content &amp;&amp; entry.enabled !== false) {
+                                var keys = (entry.key || []).join(&#39;, &#39;);
+                                formattedText += &quot;=== &quot; + keys + &quot; ===\n&quot;;
+                                formattedText += entry.content + &quot;\n\n&quot;;
+                            }
+                        });
+                    } else {
+                        formattedText += JSON.stringify(data, null, 2);
+                    }
+                    State.variables.custom_lore[name] = formattedText;
+                    if(!State.variables.active_world_ids.includes(name)) State.variables.active_world_ids.push(name);
+                    memorize(&quot;custom_lore&quot;, State.variables.custom_lore);
+                }
+                // === C. 風格預設 (大升級！) ===
+                else if (type === &#39;preset&#39;) {
+                    // 檢查是否為酒館的複雜格式 (含有 prompts 陣列)
+                    if (data.prompts &amp;&amp; Array.isArray(data.prompts)) {
+                        // 直接存儲整個結構，而不是轉成字串
+                        State.variables.custom_presets[name] = {
+                            type: &quot;advanced&quot;,
+                            data: data.prompts
+                        };
+                    } else {
+                        // 舊的簡單格式 (或者只是單純的字串)
+                        var text = data.system_prompt || data.prompt || data.content || data.data || &quot;&quot;;
+                        State.variables.custom_presets[name] = {
+                            type: &quot;simple&quot;,
+                            data: text
+                        };
+                    }
+                    
+                    // 切換到新預設
+                    State.variables.active_preset_id = name;
+                    memorize(&quot;custom_presets&quot;, State.variables.custom_presets);
+                    memorize(&quot;active_preset_id&quot;, name);
+                }
+                
+                // 匯入後刷新
+                new Wikifier(null, &#39;&lt;&lt;replace &quot;#lib-content&quot;&gt;&gt;&lt;&lt;if $lib_tab is &quot;char&quot;&gt;&gt;&lt;&lt;lib_content_char&gt;&gt;&lt;&lt;elseif $lib_tab is &quot;lore&quot;&gt;&gt;&lt;&lt;lib_content_lore&gt;&gt;&lt;&lt;else&gt;&gt;&lt;&lt;lib_content_preset&gt;&gt;&lt;&lt;/if&gt;&gt;&lt;&lt;/replace&gt;&gt;&#39;);
+                alert(&quot;📚 匯入並儲存成功： &quot; + name);
+
+            } catch (err) {
+                console.error(err);
+                alert(&quot;❌ 格式錯誤：無法解析這個 JSON 檔案。&quot;);
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    /* 2. 處理複選框 (陣列) */
+    window.toggleLibItem = function(listName, item) {
+        var list = State.variables[listName];
+        if(!Array.isArray(list)) list = [];
+        var idx = list.indexOf(item);
+        if(idx &gt; -1) list.splice(idx, 1);
+        else list.push(item);
+    };
+    
+    /* 3. 處理單選框 (風格預設) */
+    window.selectPreset = function(id) {
+        State.variables.active_preset_id = id;
+        memorize(&quot;active_preset_id&quot;, id);
+        // 刷新顯示以更新下方的開關列表
+        new Wikifier(null, &#39;&lt;&lt;replace &quot;#preset-details&quot;&gt;&gt;&lt;&lt;preset_details_panel&gt;&gt;&lt;&lt;/replace&gt;&gt;&#39;);
+    };
+
+    /* 4. 處理酒館預設內部的開關 (Toggle Sub-prompts) */
+    window.togglePresetBlock = function(presetId, blockIndex) {
+        var preset = State.variables.custom_presets[presetId];
+        if (preset &amp;&amp; preset.type === &#39;advanced&#39;) {
+            // 切換 enabled 狀態
+            preset.data[blockIndex].enabled = !preset.data[blockIndex].enabled;
+            // 存檔
+            memorize(&quot;custom_presets&quot;, State.variables.custom_presets);
+        }
+    };
+
+    /* 5. 刪除項目 */
+    window.deleteLibItem = function(type, key) {
+        if(confirm(&quot;確定要刪除「&quot; + key + &quot;」嗎？&quot;)) {
+            if(type === &#39;char&#39;) {
+                delete State.variables.custom_chars[key];
+                var idx = State.variables.active_char_ids.indexOf(key);
+                if(idx &gt; -1) State.variables.active_char_ids.splice(idx, 1);
+                memorize(&quot;custom_chars&quot;, State.variables.custom_chars);
+                new Wikifier(null, &#39;&lt;&lt;replace &quot;#lib-content&quot;&gt;&gt;&lt;&lt;lib_content_char&gt;&gt;&lt;&lt;/replace&gt;&gt;&#39;);
+            } else if (type === &#39;lore&#39;) {
+                delete State.variables.custom_lore[key];
+                var idx = State.variables.active_world_ids.indexOf(key);
+                if(idx &gt; -1) State.variables.active_world_ids.splice(idx, 1);
+                memorize(&quot;custom_lore&quot;, State.variables.custom_lore);
+                new Wikifier(null, &#39;&lt;&lt;replace &quot;#lib-content&quot;&gt;&gt;&lt;&lt;lib_content_lore&gt;&gt;&lt;&lt;/replace&gt;&gt;&#39;);
+            } else if (type === &#39;preset&#39;) {
+                delete State.variables.custom_presets[key];
+                if(State.variables.active_preset_id === key) {
+                    State.variables.active_preset_id = &quot;系統原廠&quot;;
+                    memorize(&quot;active_preset_id&quot;, &quot;系統原廠&quot;);
+                }
+                memorize(&quot;custom_presets&quot;, State.variables.custom_presets);
+                new Wikifier(null, &#39;&lt;&lt;replace &quot;#lib-content&quot;&gt;&gt;&lt;&lt;lib_content_preset&gt;&gt;&lt;&lt;/replace&gt;&gt;&#39;);
+            }
+        }
+    };
+&lt;&lt;/script&gt;&gt;
+
+/* === 介面：書籍選單外框 === */
+&lt;&lt;widget &quot;library_panel&quot;&gt;&gt;
+    &lt;div class=&quot;library-box&quot; style=&quot;border: 1px solid #555; padding: 10px; margin-top: 10px; border-radius: 5px; background: rgba(0,0,0,0.3);&quot;&gt;
+        
+        /* 頁籤切換 */
+        &lt;&lt;if ndef $lib_tab&gt;&gt;&lt;&lt;set $lib_tab to &#39;preset&#39;&gt;&gt;&lt;&lt;/if&gt;&gt;
+        
+        &lt;div style=&quot;display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9em;&quot;&gt;
+            &lt;&lt;button &quot;📝 預設&quot;&gt;&gt; &lt;&lt;set $lib_tab to &#39;preset&#39;&gt;&gt; &lt;&lt;replace &quot;#lib-content&quot;&gt;&gt;&lt;&lt;lib_content_preset&gt;&gt;&lt;&lt;/replace&gt;&gt; &lt;&lt;/button&gt;&gt;
+            &lt;&lt;button &quot;👤 角色&quot;&gt;&gt; &lt;&lt;set $lib_tab to &#39;char&#39;&gt;&gt; &lt;&lt;replace &quot;#lib-content&quot;&gt;&gt;&lt;&lt;lib_content_char&gt;&gt;&lt;&lt;/replace&gt;&gt; &lt;&lt;/button&gt;&gt;
+            &lt;&lt;button &quot;🌍 世界&quot;&gt;&gt; &lt;&lt;set $lib_tab to &#39;lore&#39;&gt;&gt; &lt;&lt;replace &quot;#lib-content&quot;&gt;&gt;&lt;&lt;lib_content_lore&gt;&gt;&lt;&lt;/replace&gt;&gt; &lt;&lt;/button&gt;&gt;
+        &lt;/div&gt;
+
+        &lt;div id=&quot;lib-content&quot;&gt;
+            &lt;&lt;if $lib_tab is &#39;char&#39;&gt;&gt;
+                &lt;&lt;lib_content_char&gt;&gt;
+            &lt;&lt;elseif $lib_tab is &#39;lore&#39;&gt;&gt;
+                &lt;&lt;lib_content_lore&gt;&gt;
+            &lt;&lt;else&gt;&gt;
+                &lt;&lt;lib_content_preset&gt;&gt;
+            &lt;&lt;/if&gt;&gt;
+        &lt;/div&gt;
+        
+    &lt;/div&gt;
+&lt;&lt;/widget&gt;&gt;
+
+/* === 內容：風格預設 (含開關面板) === */
+&lt;&lt;widget &quot;lib_content_preset&quot;&gt;&gt;
+    &lt;div style=&quot;font-size: 0.9em;&quot;&gt;
+        &lt;b&gt;📥 匯入預設 (JSON):&lt;/b&gt;&lt;br&gt;
+        &lt;input type=&quot;file&quot; onchange=&quot;loadTavernFile(this, &#39;preset&#39;)&quot; style=&quot;width: 100%; font-size: 0.8em;&quot;&gt;
+        &lt;hr style=&quot;margin: 5px 0; border-color: #444;&quot;&gt;
+        
+        &lt;b&gt;🟢 選擇預設:&lt;/b&gt;
+        &lt;div style=&quot;max-height: 100px; overflow-y: auto; text-align: left; border-bottom: 1px solid #444; margin-bottom: 5px;&quot;&gt;
+            /* 1. 系統原廠 */
+            &lt;div style=&quot;margin-bottom: 5px;&quot;&gt;
+                &lt;label&gt;
+                    &lt;input type=&quot;radio&quot; name=&quot;preset_select&quot; 
+                           @checked=&quot;$active_preset_id === &#39;系統原廠&#39;&quot;
+                           onclick=&quot;selectPreset(&#39;系統原廠&#39;)&quot; /&gt;
+                    &lt;span style=&quot;color: #ff99cc; font-weight:bold;&quot;&gt;🔒 系統原廠&lt;/span&gt;
+                &lt;/label&gt;
+            &lt;/div&gt;
+            /* 2. 玩家自定義 */
+            &lt;&lt;for _key range Object.keys($custom_presets)&gt;&gt;
+                 &lt;&lt;capture _key&gt;&gt;
+                    &lt;div style=&quot;margin-bottom: 2px; display:flex; align-items:center; justify-content:space-between;&quot;&gt;
+                        &lt;label&gt;
+                            &lt;input type=&quot;radio&quot; name=&quot;preset_select&quot;
+                                   @checked=&quot;$active_preset_id === _key&quot; 
+                                   @onclick=&quot;&#39;selectPreset(\&#39;&#39; + _key + &#39;\&#39;)&#39;&quot; /&gt;
+                            &lt;span style=&quot;color: #66ccff;&quot;&gt;💾 _key&lt;/span&gt;
+                        &lt;/label&gt;
+                        &lt;a class=&quot;delete-btn&quot; @onclick=&quot;&#39;deleteLibItem(\&#39;preset\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot;&gt;🗑️&lt;/a&gt;
+                    &lt;/div&gt;
+                 &lt;&lt;/capture&gt;&gt;
+            &lt;&lt;/for&gt;&gt;
+        &lt;/div&gt;
+        
+        /* 動態顯示詳細開關面板 */
+        &lt;div id=&quot;preset-details&quot;&gt;
+            &lt;&lt;preset_details_panel&gt;&gt;
+        &lt;/div&gt;
+
+    &lt;/div&gt;
+&lt;&lt;/widget&gt;&gt;
+
+/* === 子組件：預設詳情開關 === */
+&lt;&lt;widget &quot;preset_details_panel&quot;&gt;&gt;
+    &lt;&lt;set _currentId to $active_preset_id&gt;&gt;
+    &lt;&lt;set _presetData to $custom_presets[_currentId]&gt;&gt;
+    
+    &lt;&lt;if _presetData &amp;&amp; _presetData.type === &#39;advanced&#39;&gt;&gt;
+        &lt;div style=&quot;background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px;&quot;&gt;
+            &lt;div style=&quot;font-size:0.8em; color:#aaa; margin-bottom:5px;&quot;&gt;🎛️ &lt;b&gt;詳細模組控制&lt;/b&gt; (即時生效):&lt;/div&gt;
+            &lt;div style=&quot;max-height: 200px; overflow-y: auto;&quot;&gt;
+                &lt;&lt;for _i, _block range _presetData.data&gt;&gt;
+                    &lt;&lt;capture _currentId, _i&gt;&gt;
+                        &lt;div style=&quot;margin-bottom: 3px; border-left: 2px solid #555; padding-left: 5px;&quot;&gt;
+                            &lt;label style=&quot;display: flex; align-items: center; cursor: pointer;&quot;&gt;
+                                &lt;input type=&quot;checkbox&quot; 
+                                       @checked=&quot;_block.enabled&quot; 
+                                       @onchange=&quot;&#39;togglePresetBlock(\&#39;&#39; + _currentId + &#39;\&#39;, &#39; + _i + &#39;)&#39;&quot; /&gt;
+                                &lt;span style=&quot;font-size: 0.8em; margin-left: 5px; color: #ddd;&quot;&gt;
+                                    &lt;&lt;print _block.name || (&quot;模組 &quot; + (_i+1))&gt;&gt;
+                                &lt;/span&gt;
+                            &lt;/label&gt;
+                            /* 如果有內容預覽，可以斟酌顯示，這裡只顯示標題 */
+                        &lt;/div&gt;
+                    &lt;&lt;/capture&gt;&gt;
+                &lt;&lt;/for&gt;&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;&lt;elseif _currentId === &#39;系統原廠&#39;&gt;&gt;
+        &lt;div style=&quot;font-size:0.8em; color:#888; padding:5px;&quot;&gt;
+            (使用內建設定，無可調整選項)
+        &lt;/div&gt;
+    &lt;&lt;/if&gt;&gt;
+&lt;&lt;/widget&gt;&gt;
+
+/* === 內容：角色與世界 (保持原樣) === */
+&lt;&lt;widget &quot;lib_content_char&quot;&gt;&gt;
+    /* ... (保持上次的內容) ... */
+    &lt;div style=&quot;font-size: 0.9em;&quot;&gt;&lt;b&gt;📥 匯入角色:&lt;/b&gt;&lt;br&gt;&lt;input type=&quot;file&quot; onchange=&quot;loadTavernFile(this, &#39;char&#39;)&quot; style=&quot;width: 100%; font-size: 0.8em;&quot;&gt;&lt;hr style=&quot;margin: 5px 0; border-color: #444;&quot;&gt;&lt;b&gt;📋 啟用列表:&lt;/b&gt;&lt;div style=&quot;max-height: 150px; overflow-y: auto; text-align: left;&quot;&gt;&lt;&lt;for _key range Object.keys(setup.chars)&gt;&gt;&lt;&lt;capture _key&gt;&gt;&lt;div style=&quot;margin-bottom: 2px;&quot;&gt;&lt;label&gt;&lt;input type=&quot;checkbox&quot; @checked=&quot;$active_char_ids.includes(_key)&quot; @onchange=&quot;&#39;toggleLibItem(\&#39;active_char_ids\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot; /&gt;&lt;span style=&quot;color: #ff99cc;&quot;&gt;🔒 _key&lt;/span&gt;&lt;/label&gt;&lt;/div&gt;&lt;&lt;/capture&gt;&gt;&lt;&lt;/for&gt;&gt;&lt;&lt;for _key range Object.keys($custom_chars)&gt;&gt;&lt;&lt;capture _key&gt;&gt;&lt;div style=&quot;margin-bottom: 2px; display:flex; align-items:center; justify-content:space-between;&quot;&gt;&lt;label&gt;&lt;input type=&quot;checkbox&quot; @checked=&quot;$active_char_ids.includes(_key)&quot; @onchange=&quot;&#39;toggleLibItem(\&#39;active_char_ids\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot; /&gt;&lt;span style=&quot;color: #66ccff;&quot;&gt;💾 _key&lt;/span&gt;&lt;/label&gt;&lt;a class=&quot;delete-btn&quot; @onclick=&quot;&#39;deleteLibItem(\&#39;char\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot;&gt;🗑️&lt;/a&gt;&lt;/div&gt;&lt;&lt;/capture&gt;&gt;&lt;&lt;/for&gt;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;&lt;/widget&gt;&gt;
+
+&lt;&lt;widget &quot;lib_content_lore&quot;&gt;&gt;
+    /* ... (保持上次的內容) ... */
+     &lt;div style=&quot;font-size: 0.9em;&quot;&gt;&lt;b&gt;📥 匯入世界:&lt;/b&gt;&lt;br&gt;&lt;input type=&quot;file&quot; onchange=&quot;loadTavernFile(this, &#39;lore&#39;)&quot; style=&quot;width: 100%; font-size: 0.8em;&quot;&gt;&lt;hr style=&quot;margin: 5px 0; border-color: #444;&quot;&gt;&lt;b&gt;📋 啟用列表:&lt;/b&gt;&lt;div style=&quot;max-height: 150px; overflow-y: auto; text-align: left;&quot;&gt;&lt;&lt;for _key range Object.keys(setup.lore)&gt;&gt;&lt;&lt;capture _key&gt;&gt;&lt;div style=&quot;margin-bottom: 2px;&quot;&gt;&lt;label&gt;&lt;input type=&quot;checkbox&quot; @checked=&quot;$active_world_ids.includes(_key)&quot; @onchange=&quot;&#39;toggleLibItem(\&#39;active_world_ids\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot; /&gt;&lt;span style=&quot;color: #ff99cc;&quot;&gt;🔒 _key&lt;/span&gt;&lt;/label&gt;&lt;/div&gt;&lt;&lt;/capture&gt;&gt;&lt;&lt;/for&gt;&gt;&lt;&lt;for _key range Object.keys($custom_lore)&gt;&gt;&lt;&lt;capture _key&gt;&gt;&lt;div style=&quot;margin-bottom: 2px; display:flex; align-items:center; justify-content:space-between;&quot;&gt;&lt;label&gt;&lt;input type=&quot;checkbox&quot; @checked=&quot;$active_world_ids.includes(_key)&quot; @onchange=&quot;&#39;toggleLibItem(\&#39;active_world_ids\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot; /&gt;&lt;span style=&quot;color: #66ccff;&quot;&gt;💾 _key&lt;/span&gt;&lt;/label&gt;&lt;a class=&quot;delete-btn&quot; @onclick=&quot;&#39;deleteLibItem(\&#39;lore\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot;&gt;🗑️&lt;/a&gt;&lt;/div&gt;&lt;&lt;/capture&gt;&gt;&lt;&lt;/for&gt;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="7" name="Start" tags="" position="850,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
 &lt;div style=&quot;text-align: center; margin-top: 5%;&quot;&gt;
     &lt;h1&gt;✦ 初始設定 ✦&lt;/h1&gt;
     &lt;hr style=&quot;width: 50%; border-color: #ff69b4;&quot;&gt;
@@ -703,12 +1021,12 @@ setup.lore["隨身空間"] = `
 [[開始 AI 互動-&gt;Action_Handler][$player_act = &quot;玩家醒來，觀察四周&quot;]]
 [[測試真假-&gt;Action_Handler][$player_act = &quot;請告訴我 123 乘以 456 等於多少&quot;]]
 
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="7" name="💠開門💠" tags="" position="850,100" size="100,100">宇宙諸界，隨心遨遊。
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="8" name="💠開門💠" tags="" position="975,100" size="100,100">宇宙諸界，隨心遨遊。
 今欲往？
 
 [[玄幻 · 世界01 -&gt; 💠世界01💠]]
 [[西幻 · 世界02 -&gt; 💠世界02💠]]
-[[關門 -&gt; 💠隨身空間💠]]</tw-passagedata><tw-passagedata pid="8" name="返回現實" tags="" position="975,100" size="100,100">/* 說明：這是一個「中轉站」，玩家不會看到這個頁面。
+[[關門 -&gt; 💠隨身空間💠]]</tw-passagedata><tw-passagedata pid="9" name="返回現實" tags="" position="1100,100" size="100,100">/* 說明：這是一個「中轉站」，玩家不會看到這個頁面。
     它負責讀取變數，把玩家送回原本的地方。
 */
 
@@ -719,7 +1037,7 @@ setup.lore["隨身空間"] = `
 &lt;&lt;else&gt;&gt;
     /* 如果找不到回去的路 (例如直接從測試模式啟動遊戲)，預設傳送到首頁 */
     &lt;&lt;goto &quot;Start&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;</tw-passagedata><tw-passagedata pid="9" name="💠資源培植區💠" tags="" position="1100,100" size="100,100"></tw-passagedata><tw-passagedata pid="10" name="💠隨身空間💠" tags="隨身空間" position="1225,100" size="100,100">&lt;center&gt;&lt;h1&gt;🌌 隨身空間 · 亞空間樞紐 🌌&lt;/h1&gt;&lt;/center&gt;
+&lt;&lt;/if&gt;&gt;</tw-passagedata><tw-passagedata pid="10" name="💠資源培植區💠" tags="" position="1225,100" size="100,100"></tw-passagedata><tw-passagedata pid="11" name="💠隨身空間💠" tags="隨身空間" position="100,225" size="100,100">&lt;center&gt;&lt;h1&gt;🌌 隨身空間 · 亞空間樞紐 🌌&lt;/h1&gt;&lt;/center&gt;
 你漂浮在無垠的時空夾縫之中。
 這裡是由你的神魂與「慾門」共生而成的絕對領域，沒有重力的束縛，也沒有時間的流逝。
     
@@ -746,7 +1064,7 @@ setup.lore["隨身空間"] = `
 生機勃勃的箱庭，代表了無限可能性。
 這裡模擬著完美的生長環境，用於培育特殊生命，提供源源不絕的後勤支持。
 
-[[💠 前往：資源培植區 -&gt; 💠資源培植區💠]]</tw-passagedata><tw-passagedata pid="11" name="💠環形歸納區💠" tags="" position="100,225" size="100,100"></tw-passagedata><tw-passagedata pid="12" name="💠羽之繭👉壁掛式 • 透明智能馬桶💠" tags="隨身空間" position="225,225" size="100,100">&lt;center&gt;&lt;h3&gt;🚽 壁掛式 • 透明智能馬桶&lt;/h3&gt;&lt;/center&gt;
+[[💠 前往：資源培植區 -&gt; 💠資源培植區💠]]</tw-passagedata><tw-passagedata pid="12" name="💠環形歸納區💠" tags="" position="225,225" size="100,100"></tw-passagedata><tw-passagedata pid="13" name="💠羽之繭👉壁掛式 • 透明智能馬桶💠" tags="隨身空間" position="350,225" size="100,100">&lt;center&gt;&lt;h3&gt;🚽 壁掛式 • 透明智能馬桶&lt;/h3&gt;&lt;/center&gt;
 這是一個懸空的壁掛式智能馬桶，造型流暢充滿科技感。
 
 它最特殊的功能在於其「觀測模式」。
@@ -763,7 +1081,7 @@ setup.lore["隨身空間"] = `
 [[在馬桶上自慰 -&gt; 💠馬桶👉自慰事件💠]]
 
 
-[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="13" name="💠羽之繭👉嵌入式 • 衛浴用品收納壁櫃💠" tags="隨身空間" position="350,225" size="100,100">&lt;center&gt;&lt;h3&gt;🧴 嵌入式 • 衛浴用品收納壁櫃&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="14" name="💠羽之繭👉嵌入式 • 衛浴用品收納壁櫃💠" tags="隨身空間" position="475,225" size="100,100">&lt;center&gt;&lt;h3&gt;🧴 嵌入式 • 衛浴用品收納壁櫃&lt;/h3&gt;&lt;/center&gt;
 嵌入牆面的鏡櫃門向兩側滑開，露出了內部井然有序的收納空間。
 這裡具備自動烘乾、紫外線消毒與充電功能，確保所有用品隨時處於無菌且可用的最佳狀態。
 
@@ -778,7 +1096,7 @@ setup.lore["隨身空間"] = `
 [[使用衛浴用品自慰 -&gt; 💠衛浴櫃👉自慰事件💠]]
 
 
-[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="14" name="💠羽之繭👉多功能調教 • 淋浴間💠" tags="隨身空間" position="475,225" size="100,100">&lt;center&gt;&lt;h3&gt;🚿 多功能調教 • 淋浴間&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="15" name="💠羽之繭👉多功能調教 • 淋浴間💠" tags="隨身空間" position="600,225" size="100,100">&lt;center&gt;&lt;h3&gt;🚿 多功能調教 • 淋浴間&lt;/h3&gt;&lt;/center&gt;
 這是一個沒有實體門扇的開放式淋浴空間，僅利用真空吸盤伸縮桿掛著雙層浴簾作為簡易遮擋。
 拉開浴簾，內部的空間寬敞得足以容納兩三人同時洗浴，或者進行某些社交運動。
 
@@ -809,7 +1127,7 @@ setup.lore["隨身空間"] = `
 
 &lt;&lt;/link&gt;&gt;
 
-[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="15" name="💠羽之繭👉衛浴艙💠" tags="隨身空間" position="600,225" size="100,100">&lt;center&gt;&lt;h3&gt;🌊 衛浴清潔區&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭👉衛浴艙💠]]</tw-passagedata><tw-passagedata pid="16" name="💠羽之繭👉衛浴艙💠" tags="隨身空間" position="725,225" size="100,100">&lt;center&gt;&lt;h3&gt;🌊 衛浴清潔區&lt;/h3&gt;&lt;/center&gt;
 你踏入了位於空間12點至3點鐘方向的衛浴區域。
 這裡採用了極致的乾溼分離設計，地面鋪設著防滑且恆溫的親膚材質，赤腳踩上去完全不會感到冰冷。
 
@@ -824,7 +1142,7 @@ setup.lore["隨身空間"] = `
 [[🧴 嵌入式 • 衛浴用品收納壁櫃 -&gt; 💠羽之繭👉嵌入式 • 衛浴用品收納壁櫃💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="16" name="💠羽之繭👉嵌入式 • L型壁掛桌板💠" tags="隨身空間" position="725,225" size="100,100">&lt;center&gt;&lt;h3&gt;🛋️ 嵌入式 • L型壁掛桌板&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="17" name="💠羽之繭👉嵌入式 • L型壁掛桌板💠" tags="隨身空間" position="850,225" size="100,100">&lt;center&gt;&lt;h3&gt;🛋️ 嵌入式 • L型壁掛桌板&lt;/h3&gt;&lt;/center&gt;
 位於 3 點至 4 點鐘方向，一張純白色的L型桌板從牆面延伸而出。
 它的線條極度簡約，與衛浴艙的外牆結構完美地融為一體，沒有任何多餘的桌腳阻礙雙腿的活動。
 這裡既是梳妝台，也是臨時的書寫與辦公區域。桌面材質溫潤，似乎還整合了隱藏式的觸控面板，可以控制附近的燈光與氛圍。
@@ -836,7 +1154,7 @@ setup.lore["隨身空間"] = `
 [[搭配桌板自慰 -&gt; 💠桌板👉自慰事件💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="17" name="💠羽之繭👉嵌入式 • 性玩具收納壁櫃💠" tags="隨身空間" position="850,225" size="100,100">&lt;center&gt;&lt;h3&gt;🔞 嵌入式 • 性玩具收納壁櫃&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="18" name="💠羽之繭👉嵌入式 • 性玩具收納壁櫃💠" tags="隨身空間" position="975,225" size="100,100">&lt;center&gt;&lt;h3&gt;🔞 嵌入式 • 性玩具收納壁櫃&lt;/h3&gt;&lt;/center&gt;
 位於4點20分至5點鐘方向的牆面，是一扇帶有生物識別鎖的櫃門。
 隨著解鎖聲響起，櫃門緩緩開啟，內部透出幽暗的紅光。這裡是用來存放性玩具與調教設備的專屬空間。
 每一件器具都有專屬的固定槽位，並連接了自動清洗、烘乾、消毒與充電接口。
@@ -849,7 +1167,7 @@ setup.lore["隨身空間"] = `
 [[選用玩具自慰 -&gt; 💠玩具櫃👉自慰事件💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="18" name="💠羽之繭👉嵌入式 • 零食櫃💠" tags="隨身空間" position="975,225" size="100,100">&lt;center&gt;&lt;h3&gt;🍫 嵌入式 • 零食櫃&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="19" name="💠羽之繭👉嵌入式 • 零食櫃💠" tags="隨身空間" position="1100,225" size="100,100">&lt;center&gt;&lt;h3&gt;🍫 嵌入式 • 零食櫃&lt;/h3&gt;&lt;/center&gt;
 位於5點20分至6點10分區域，這個嵌入式櫃體被劃分為三個功能區塊，滿載著讓人感到幸福的卡路里。
 
 上層，零食區。
@@ -867,7 +1185,7 @@ setup.lore["隨身空間"] = `
 [[人體盛 -&gt; 💠零食櫃👉自慰事件💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="19" name="💠羽之繭👉壁掛式 • 飲水機💠" tags="隨身空間" position="1100,225" size="100,100">&lt;center&gt;&lt;h3&gt;💧 壁掛式 • 飲水機&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="20" name="💠羽之繭👉壁掛式 • 飲水機💠" tags="隨身空間" position="1225,225" size="100,100">&lt;center&gt;&lt;h3&gt;💧 壁掛式 • 飲水機&lt;/h3&gt;&lt;/center&gt;
 於6點10分至6點30分處，比鄰零食櫃與次淨衣區，是一台壁掛式飲水機。
 它連接了空間內的無限水循環系統，能夠在一秒內提供設定溫度的飲用水。
 
@@ -882,7 +1200,7 @@ setup.lore["隨身空間"] = `
 [[使用飲水機自慰 -&gt; 💠飲水機👉自慰事件💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="20" name="💠羽之繭👉嵌入式 • 次凈衣掛區💠" tags="隨身空間" position="1225,225" size="100,100">&lt;center&gt;&lt;h3&gt;🧥 嵌入式 • 次凈衣掛區&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="21" name="💠羽之繭👉嵌入式 • 次凈衣掛區💠" tags="隨身空間" position="100,350" size="100,100">&lt;center&gt;&lt;h3&gt;🧥 嵌入式 • 次凈衣掛區&lt;/h3&gt;&lt;/center&gt;
 位於6點30分至7點20分的牆面，安裝著一排極簡風格的掛鉤與橫桿。
 這裡是專門用來放置次淨衣的地方。
 
@@ -895,7 +1213,7 @@ setup.lore["隨身空間"] = `
 [[使用衣物自慰 -&gt; 💠次凈衣👉自慰事件💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="21" name="💠羽之繭👉弧形艙門💠" tags="隨身空間" position="100,350" size="100,100">&lt;center&gt;&lt;h3&gt;🚪 弧形艙門&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="22" name="💠羽之繭👉弧形艙門💠" tags="隨身空間" position="225,350" size="100,100">&lt;center&gt;&lt;h3&gt;🚪 弧形艙門&lt;/h3&gt;&lt;/center&gt;
 位於7點30分至7點50分方向，這是一扇與球型內壁完美貼合的弧形氣密艙門。
 門體厚重且具有極佳的隔音效果，將羽之繭內部的私密溫馨與外部的功能性區域完全隔絕。
 
@@ -910,7 +1228,7 @@ setup.lore["隨身空間"] = `
 [[開啟艙門，前往外部 -&gt; 💠隨身空間💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="22" name="💠羽之繭👉嵌入式 • 衣櫃💠" tags="隨身空間" position="225,350" size="100,100">&lt;center&gt;&lt;h4&gt;👗 嵌入式 • 衣櫃&lt;/h4&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="23" name="💠羽之繭👉嵌入式 • 衣櫃💠" tags="隨身空間" position="350,350" size="100,100">&lt;center&gt;&lt;h4&gt;👗 嵌入式 • 衣櫃&lt;/h4&gt;&lt;/center&gt;
 佔據了8點至9點40分的大片牆面，這是羽之繭內最大的收納設施。
 衣櫃門採用了與牆面相同的「星之織」材質，內部空間分三層。
 
@@ -931,7 +1249,7 @@ setup.lore["隨身空間"] = `
 [[換裝 -&gt; 💠衣櫃👉換裝事件💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="23" name="💠羽之繭👉多功能 • 投影牆💠" tags="隨身空間" position="350,350" size="100,100">&lt;center&gt;&lt;h3&gt;📽️ 多功能 • 投影牆&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="24" name="💠羽之繭👉多功能 • 投影牆💠" tags="隨身空間" position="475,350" size="100,100">&lt;center&gt;&lt;h3&gt;📽️ 多功能 • 投影牆&lt;/h3&gt;&lt;/center&gt;
 10點至12點方向的弧形牆壁，實際上是一塊巨大的高解析度投影顯示區。
 此外，它可以模擬出落地窗外的風景，為封閉的球型空間帶來開闊感。
 [[切換背景 -&gt; 💠投影牆👉背景選擇💠]]
@@ -946,7 +1264,7 @@ setup.lore["隨身空間"] = `
 [[選擇娛樂項目 -&gt; 💠投影牆👉娛樂選擇💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="24" name="💠投影牆👉背景選擇💠" tags="" position="475,350" size="100,100">不同世界的風光於你眼前懸浮輪換，滿目琳瑯。
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="25" name="💠投影牆👉背景選擇💠" tags="" position="600,350" size="100,100">不同世界的風光於你眼前懸浮輪換，滿目琳瑯。
 
 [[切換背景：雨夜霓虹 -&gt; 💠投影牆👉雨夜霓虹💠]]
 [[切換背景：午後海灘 -&gt; 💠投影牆👉午後海灘💠]]
@@ -961,7 +1279,7 @@ setup.lore["隨身空間"] = `
 [[切換背景：門派據點 -&gt; 💠投影牆👉門派據點💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="25" name="💠羽之繭👉多功能 • 調教摺疊圓床💠" tags="隨身空間" position="600,350" size="100,100">&lt;center&gt;&lt;h3&gt;🛌 多功能 • 調教摺疊圓床&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="26" name="💠羽之繭👉多功能 • 調教摺疊圓床💠" tags="隨身空間" position="725,350" size="100,100">&lt;center&gt;&lt;h3&gt;🛌 多功能 • 調教摺疊圓床&lt;/h3&gt;&lt;/center&gt;
 懸浮於球型空間正中央的，是一張巨大的白色圓型軟床。
 床架由「星之織」打造，床墊的觸感如同棉花糖般柔軟，能夠完美貼合身體的每一道曲線。
 但仔細觀察便會發現，床沿與床體內部隱藏著無數個金屬扣環與伸縮帶接口。只要一聲指令，這張溫馨的睡床就能瞬間變形成為一張功能齊全的刑台，將躺在上面的人牢牢固定成任何羞恥的姿勢。
@@ -974,7 +1292,7 @@ setup.lore["隨身空間"] = `
 [[查看實時監控 -&gt; 💠羽之繭👉頂部懸掛 • 雲端實時監控裝置💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="26" name="💠羽之繭👉頂部懸掛 • 束縛裝置💠" tags="隨身空間" position="725,350" size="100,100">&lt;center&gt;&lt;h3&gt;⛓️ 頂部懸掛 • 束縛裝置&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="27" name="💠羽之繭👉頂部懸掛 • 束縛裝置💠" tags="隨身空間" position="850,350" size="100,100">&lt;center&gt;&lt;h3&gt;⛓️ 頂部懸掛 • 束縛裝置&lt;/h3&gt;&lt;/center&gt;
 抬頭仰望，在羽之繭潔白的穹頂之上，隱藏著一套複雜的機械懸掛系統。
 平時這些裝置收納在頂部的凹槽中，一旦啟動，數條高強度的合成纖維拘束帶與金屬鎖鏈便會垂落而下，懸停在圓床上方。
 
@@ -988,7 +1306,7 @@ setup.lore["隨身空間"] = `
 [[查看實時監控 -&gt; 💠羽之繭👉頂部懸掛 • 雲端實時監控裝置💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="27" name="💠羽之繭👉頂部懸掛 • 雲端實時監控裝置💠" tags="隨身空間" position="850,350" size="100,100">&lt;center&gt;&lt;h3&gt;👁️ 頂部懸掛 • 雲端實時監控裝置&lt;/h3&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="28" name="💠羽之繭👉頂部懸掛 • 雲端實時監控裝置💠" tags="隨身空間" position="975,350" size="100,100">&lt;center&gt;&lt;h3&gt;👁️ 頂部懸掛 • 雲端實時監控裝置&lt;/h3&gt;&lt;/center&gt;
 在穹頂的正中央，也就是圓床的正上方，鑲嵌著一顆散發著微弱呼吸燈光的球型鏡頭——「主觀測眼」。
 以此為核心，周圍還分佈著數個隱藏式的輔助鏡頭，構成了 360 度無死角的監控網絡。
 在這個羽之繭內，任何角落、任何角度的私密行為都無法逃脫它的捕捉。
@@ -1001,7 +1319,7 @@ setup.lore["隨身空間"] = `
 [[查看目前鏡頭視角 -&gt; 💠羽之繭👉多功能 • 投影牆💠]]
 
 
-[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="28" name="💠羽之繭💠" tags="隨身空間" position="975,350" size="100,100">&lt;center&gt;&lt;h2&gt;🔘羽之繭🔘&lt;/h2&gt;&lt;/center&gt;
+[[返回 -&gt; 💠羽之繭💠]]</tw-passagedata><tw-passagedata pid="29" name="💠羽之繭💠" tags="隨身空間" position="1100,350" size="100,100">&lt;center&gt;&lt;h2&gt;🔘羽之繭🔘&lt;/h2&gt;&lt;/center&gt;
 妳身處於直徑數米的完美球型懸浮空間內，四周是由「星之織」構成的純白壁面。
 這裡沒有冷硬的牆角與邊界，視線所及皆是無縫、圓弧、一體的柔和曲線。
 

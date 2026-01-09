@@ -1,0 +1,265 @@
+:: widget_Library [widget]
+
+/* === 核心：Javascript 處理區 (支援酒館複雜預設) === */
+<<script>>
+    /* 1. 檔案匯入處理 */
+    window.loadTavernFile = function(input, type) {
+        if (!input.files || !input.files[0]) return;
+        var file = input.files[0];
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+            var content = e.target.result;
+            try {
+                var data = JSON.parse(content);
+                // 兼容 V2
+                if (data.spec === 'chara_card_v2' && data.data) data = data.data;
+
+                var name = data.name || (file.name.replace(/\.[^/.]+$/, "")) || "未命名"; 
+
+                // === A. 角色書 ===
+                if (type === 'char') {
+                    var formattedText = "【角色名稱】：" + name + "\n";
+                    if (data.entries) { 
+                        formattedText += "【詳細設定集成】 (Source: Lorebook):\n";
+                        Object.values(data.entries).forEach(entry => {
+                            if(entry.content && entry.enabled !== false) {
+                                var keys = (entry.key || []).join(', ');
+                                if (keys.includes("權能") || keys.includes("天賦") || keys.includes("鎖定")) {
+                                    formattedText += "🔴 [IMPORTANT]: " + keys + "\n";
+                                } else {
+                                    formattedText += "--- [" + keys + "] ---\n";
+                                }
+                                formattedText += entry.content + "\n\n";
+                            }
+                        });
+                    } else {
+                        if(data.description) formattedText += "【描述】：" + data.description + "\n";
+                        if(data.personality) formattedText += "【性格】：" + data.personality + "\n";
+                        if(data.first_mes) formattedText += "【開場白】：" + data.first_mes + "\n";
+                    }
+                    State.variables.custom_chars[name] = formattedText;
+                    if(!State.variables.active_char_ids.includes(name)) State.variables.active_char_ids.push(name);
+                    memorize("custom_chars", State.variables.custom_chars);
+                } 
+                // === B. 世界書 ===
+                else if (type === 'lore') {
+                    var formattedText = "【世界觀】：" + name + "\n";
+                    if (data.entries) {
+                        Object.values(data.entries).forEach(entry => {
+                            if(entry.content && entry.enabled !== false) {
+                                var keys = (entry.key || []).join(', ');
+                                formattedText += "=== " + keys + " ===\n";
+                                formattedText += entry.content + "\n\n";
+                            }
+                        });
+                    } else {
+                        formattedText += JSON.stringify(data, null, 2);
+                    }
+                    State.variables.custom_lore[name] = formattedText;
+                    if(!State.variables.active_world_ids.includes(name)) State.variables.active_world_ids.push(name);
+                    memorize("custom_lore", State.variables.custom_lore);
+                }
+                // === C. 風格預設 (大升級！) ===
+                else if (type === 'preset') {
+                    // 檢查是否為酒館的複雜格式 (含有 prompts 陣列)
+                    if (data.prompts && Array.isArray(data.prompts)) {
+                        // 直接存儲整個結構，而不是轉成字串
+                        State.variables.custom_presets[name] = {
+                            type: "advanced",
+                            data: data.prompts
+                        };
+                    } else {
+                        // 舊的簡單格式 (或者只是單純的字串)
+                        var text = data.system_prompt || data.prompt || data.content || data.data || "";
+                        State.variables.custom_presets[name] = {
+                            type: "simple",
+                            data: text
+                        };
+                    }
+                    
+                    // 切換到新預設
+                    State.variables.active_preset_id = name;
+                    memorize("custom_presets", State.variables.custom_presets);
+                    memorize("active_preset_id", name);
+                }
+                
+                // 匯入後刷新
+                new Wikifier(null, '<<replace "#lib-content">><<if $lib_tab is "char">><<lib_content_char>><<elseif $lib_tab is "lore">><<lib_content_lore>><<else>><<lib_content_preset>><</if>><</replace>>');
+                alert("📚 匯入並儲存成功： " + name);
+
+            } catch (err) {
+                console.error(err);
+                alert("❌ 格式錯誤：無法解析這個 JSON 檔案。");
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    /* 2. 處理複選框 (陣列) */
+    window.toggleLibItem = function(listName, item) {
+        var list = State.variables[listName];
+        if(!Array.isArray(list)) list = [];
+        var idx = list.indexOf(item);
+        if(idx > -1) list.splice(idx, 1);
+        else list.push(item);
+    };
+    
+    /* 3. 處理單選框 (風格預設) */
+    window.selectPreset = function(id) {
+        State.variables.active_preset_id = id;
+        memorize("active_preset_id", id);
+        // 刷新顯示以更新下方的開關列表
+        new Wikifier(null, '<<replace "#preset-details">><<preset_details_panel>><</replace>>');
+    };
+
+    /* 4. 處理酒館預設內部的開關 (Toggle Sub-prompts) */
+    window.togglePresetBlock = function(presetId, blockIndex) {
+        var preset = State.variables.custom_presets[presetId];
+        if (preset && preset.type === 'advanced') {
+            // 切換 enabled 狀態
+            preset.data[blockIndex].enabled = !preset.data[blockIndex].enabled;
+            // 存檔
+            memorize("custom_presets", State.variables.custom_presets);
+        }
+    };
+
+    /* 5. 刪除項目 */
+    window.deleteLibItem = function(type, key) {
+        if(confirm("確定要刪除「" + key + "」嗎？")) {
+            if(type === 'char') {
+                delete State.variables.custom_chars[key];
+                var idx = State.variables.active_char_ids.indexOf(key);
+                if(idx > -1) State.variables.active_char_ids.splice(idx, 1);
+                memorize("custom_chars", State.variables.custom_chars);
+                new Wikifier(null, '<<replace "#lib-content">><<lib_content_char>><</replace>>');
+            } else if (type === 'lore') {
+                delete State.variables.custom_lore[key];
+                var idx = State.variables.active_world_ids.indexOf(key);
+                if(idx > -1) State.variables.active_world_ids.splice(idx, 1);
+                memorize("custom_lore", State.variables.custom_lore);
+                new Wikifier(null, '<<replace "#lib-content">><<lib_content_lore>><</replace>>');
+            } else if (type === 'preset') {
+                delete State.variables.custom_presets[key];
+                if(State.variables.active_preset_id === key) {
+                    State.variables.active_preset_id = "系統原廠";
+                    memorize("active_preset_id", "系統原廠");
+                }
+                memorize("custom_presets", State.variables.custom_presets);
+                new Wikifier(null, '<<replace "#lib-content">><<lib_content_preset>><</replace>>');
+            }
+        }
+    };
+<</script>>
+
+/* === 介面：書籍選單外框 === */
+<<widget "library_panel">>
+    <div class="library-box" style="border: 1px solid #555; padding: 10px; margin-top: 10px; border-radius: 5px; background: rgba(0,0,0,0.3);">
+        
+        /* 頁籤切換 */
+        <<if ndef $lib_tab>><<set $lib_tab to 'preset'>><</if>>
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9em;">
+            <<button "📝 預設">> <<set $lib_tab to 'preset'>> <<replace "#lib-content">><<lib_content_preset>><</replace>> <</button>>
+            <<button "👤 角色">> <<set $lib_tab to 'char'>> <<replace "#lib-content">><<lib_content_char>><</replace>> <</button>>
+            <<button "🌍 世界">> <<set $lib_tab to 'lore'>> <<replace "#lib-content">><<lib_content_lore>><</replace>> <</button>>
+        </div>
+
+        <div id="lib-content">
+            <<if $lib_tab is 'char'>>
+                <<lib_content_char>>
+            <<elseif $lib_tab is 'lore'>>
+                <<lib_content_lore>>
+            <<else>>
+                <<lib_content_preset>>
+            <</if>>
+        </div>
+        
+    </div>
+<</widget>>
+
+/* === 內容：風格預設 (含開關面板) === */
+<<widget "lib_content_preset">>
+    <div style="font-size: 0.9em;">
+        <b>📥 匯入預設 (JSON):</b><br>
+        <input type="file" onchange="loadTavernFile(this, 'preset')" style="width: 100%; font-size: 0.8em;">
+        <hr style="margin: 5px 0; border-color: #444;">
+        
+        <b>🟢 選擇預設:</b>
+        <div style="max-height: 100px; overflow-y: auto; text-align: left; border-bottom: 1px solid #444; margin-bottom: 5px;">
+            /* 1. 系統原廠 */
+            <div style="margin-bottom: 5px;">
+                <label>
+                    <input type="radio" name="preset_select" 
+                           @checked="$active_preset_id === '系統原廠'"
+                           onclick="selectPreset('系統原廠')" />
+                    <span style="color: #ff99cc; font-weight:bold;">🔒 系統原廠</span>
+                </label>
+            </div>
+            /* 2. 玩家自定義 */
+            <<for _key range Object.keys($custom_presets)>>
+                 <<capture _key>>
+                    <div style="margin-bottom: 2px; display:flex; align-items:center; justify-content:space-between;">
+                        <label>
+                            <input type="radio" name="preset_select"
+                                   @checked="$active_preset_id === _key" 
+                                   @onclick="'selectPreset(\'' + _key + '\')'" />
+                            <span style="color: #66ccff;">💾 _key</span>
+                        </label>
+                        <a class="delete-btn" @onclick="'deleteLibItem(\'preset\', \'' + _key + '\')'">🗑️</a>
+                    </div>
+                 <</capture>>
+            <</for>>
+        </div>
+        
+        /* 動態顯示詳細開關面板 */
+        <div id="preset-details">
+            <<preset_details_panel>>
+        </div>
+
+    </div>
+<</widget>>
+
+/* === 子組件：預設詳情開關 === */
+<<widget "preset_details_panel">>
+    <<set _currentId to $active_preset_id>>
+    <<set _presetData to $custom_presets[_currentId]>>
+    
+    <<if _presetData && _presetData.type === 'advanced'>>
+        <div style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px;">
+            <div style="font-size:0.8em; color:#aaa; margin-bottom:5px;">🎛️ <b>詳細模組控制</b> (即時生效):</div>
+            <div style="max-height: 200px; overflow-y: auto;">
+                <<for _i, _block range _presetData.data>>
+                    <<capture _currentId, _i>>
+                        <div style="margin-bottom: 3px; border-left: 2px solid #555; padding-left: 5px;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" 
+                                       @checked="_block.enabled" 
+                                       @onchange="'togglePresetBlock(\'' + _currentId + '\', ' + _i + ')'" />
+                                <span style="font-size: 0.8em; margin-left: 5px; color: #ddd;">
+                                    <<print _block.name || ("模組 " + (_i+1))>>
+                                </span>
+                            </label>
+                            /* 如果有內容預覽，可以斟酌顯示，這裡只顯示標題 */
+                        </div>
+                    <</capture>>
+                <</for>>
+            </div>
+        </div>
+    <<elseif _currentId === '系統原廠'>>
+        <div style="font-size:0.8em; color:#888; padding:5px;">
+            (使用內建設定，無可調整選項)
+        </div>
+    <</if>>
+<</widget>>
+
+/* === 內容：角色與世界 (保持原樣) === */
+<<widget "lib_content_char">>
+    /* ... (保持上次的內容) ... */
+    <div style="font-size: 0.9em;"><b>📥 匯入角色:</b><br><input type="file" onchange="loadTavernFile(this, 'char')" style="width: 100%; font-size: 0.8em;"><hr style="margin: 5px 0; border-color: #444;"><b>📋 啟用列表:</b><div style="max-height: 150px; overflow-y: auto; text-align: left;"><<for _key range Object.keys(setup.chars)>><<capture _key>><div style="margin-bottom: 2px;"><label><input type="checkbox" @checked="$active_char_ids.includes(_key)" @onchange="'toggleLibItem(\'active_char_ids\', \'' + _key + '\')'" /><span style="color: #ff99cc;">🔒 _key</span></label></div><</capture>><</for>><<for _key range Object.keys($custom_chars)>><<capture _key>><div style="margin-bottom: 2px; display:flex; align-items:center; justify-content:space-between;"><label><input type="checkbox" @checked="$active_char_ids.includes(_key)" @onchange="'toggleLibItem(\'active_char_ids\', \'' + _key + '\')'" /><span style="color: #66ccff;">💾 _key</span></label><a class="delete-btn" @onclick="'deleteLibItem(\'char\', \'' + _key + '\')'">🗑️</a></div><</capture>><</for>></div></div>
+<</widget>>
+
+<<widget "lib_content_lore">>
+    /* ... (保持上次的內容) ... */
+     <div style="font-size: 0.9em;"><b>📥 匯入世界:</b><br><input type="file" onchange="loadTavernFile(this, 'lore')" style="width: 100%; font-size: 0.8em;"><hr style="margin: 5px 0; border-color: #444;"><b>📋 啟用列表:</b><div style="max-height: 150px; overflow-y: auto; text-align: left;"><<for _key range Object.keys(setup.lore)>><<capture _key>><div style="margin-bottom: 2px;"><label><input type="checkbox" @checked="$active_world_ids.includes(_key)" @onchange="'toggleLibItem(\'active_world_ids\', \'' + _key + '\')'" /><span style="color: #ff99cc;">🔒 _key</span></label></div><</capture>><</for>><<for _key range Object.keys($custom_lore)>><<capture _key>><div style="margin-bottom: 2px; display:flex; align-items:center; justify-content:space-between;"><label><input type="checkbox" @checked="$active_world_ids.includes(_key)" @onchange="'toggleLibItem(\'active_world_ids\', \'' + _key + '\')'" /><span style="color: #66ccff;">💾 _key</span></label><a class="delete-btn" @onclick="'deleteLibItem(\'lore\', \'' + _key + '\')'">🗑️</a></div><</capture>><</for>></div></div>
+<</widget>>

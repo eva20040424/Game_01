@@ -161,3 +161,15 @@ details[open] summary::before {
     letter-spacing: 1px;
     box-shadow: inset 0 0 10px rgba(0, 170, 255, 0.2);
 }
+
+.delete-btn {
+    cursor: pointer;
+    font-size: 0.8em;
+    opacity: 0.5;
+    margin-right: 5px;
+    text-decoration: none !important;
+}
+.delete-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}

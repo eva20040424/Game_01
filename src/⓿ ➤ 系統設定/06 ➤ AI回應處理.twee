@@ -1,7 +1,7 @@
 :: Action_Handler
 
 <div id="ai-status" style="text-align:center; padding: 20px; color: cyan; border: 1px dashed #444; margin: 10px;">
-    正在呼叫 Google 大腦... <br>
+    AI生成中... <br>
     <span class="spinner">💫</span> 使用模型：<<print $aiModel>>
 </div>
 
@@ -29,35 +29,96 @@
     } else {
         var url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
 
-        /* === 1. 組合提示詞積木 === */
+       /* === 1. 組合提示詞積木 === */
         
-        // A. 系統基礎指令
-        var basePrompt = setup.ai_prompt; 
-        
-        // B. 讀取當前啟用的「世界書」 (預設使用 '通用規則'，除非有指定)
-        var activeWorldId = State.variables.active_world_id || "通用規則";
-        var worldInfo = setup.lore[activeWorldId] ? "[WORLD SETTING]:\n" + setup.lore[activeWorldId] : "";
+        // A. 系統基礎指令 (Style / System Prompt)
+        var basePrompt = "";
+        var currentPresetId = State.variables.active_preset_id; 
+        var presetObj = State.variables.custom_presets[currentPresetId];
 
-        // C. 讀取當前啟用的「角色卡」
-        var activeCharId = State.variables.active_char_id;
-        var charInfo = "";
-        if (activeCharId && setup.chars[activeCharId]) {
-            charInfo = "[CHARACTER CARD]:\n" + setup.chars[activeCharId];
+        if (!presetObj || currentPresetId === "系統原廠") {
+            // 情況 1：使用系統原廠
+            basePrompt = setup.ai_prompt;
+        } else if (presetObj.type === 'simple') {
+            // 情況 2：使用舊版簡單預設 (只有一段字)
+            basePrompt = presetObj.data;
+        } else if (presetObj.type === 'advanced') {
+            // 情況 3：✨ 使用酒館複雜預設 (積木組合) ✨
+            // 遍歷所有模組，只把 enabled = true 的拼起來
+            var promptParts = [];
+            presetObj.data.forEach(function(block) {
+                if (block.enabled) {
+                    promptParts.push(block.content);
+                }
+            });
+            basePrompt = promptParts.join("\n\n");
         }
+        
+        console.log("🔥 Prompt 組合完成，來源：", currentPresetId);
 
-        // D. 其他動態資訊
-        var userSystemSetting = State.variables.systemPrompt || "";
+        // B. 世界觀 (Lore)
+        var worldIds = [];
+        if (State.variables.active_world_ids) worldIds = worldIds.concat(State.variables.active_world_ids);
+        if (State.variables.active_world_id) worldIds.push(State.variables.active_world_id);
+        if (worldIds.length === 0) worldIds.push("通用規則");
+
+        var worldInfo = "";
+        [...new Set(worldIds)].forEach(function(id) {
+            var content = State.variables.custom_lore[id] || setup.lore[id];
+            if (content) worldInfo += "### [WORLD SETTING - " + id + "]:\n" + content + "\n\n";
+        });
+
+        // C. 角色書 (Character) - 分離 NPC 與 主角
+        var charIds = [];
+        if (State.variables.active_char_ids) charIds = charIds.concat(State.variables.active_char_ids);
+        if (State.variables.active_char_id) charIds.push(State.variables.active_char_id);
+
+        var npcInfo = "";
+        var playerInfo = "";
+        var playerName = State.variables.name;
+
+        [...new Set(charIds)].forEach(function(id) {
+            var content = State.variables.custom_chars[id] || setup.chars[id];
+            if (content) {
+                if (id === playerName) {
+                    // 主角：這裡先不放內容，我們留到最後放，利用「近因效應」增強記憶
+                    playerInfo = content; 
+                } else {
+                    npcInfo += "### [NPC CHARACTER - " + id + "]:\n" + content + "\n\n";
+                }
+            }
+        });
+
+        // D. 生理數據與動態
+        var statusPrompt = "【Current Physiological Data】:\n" +
+                           "- Bladder Volume: " + State.variables.sys_bladder_ml + "ml (" + State.variables.sys_bladder_state + ")\n" +
+                           "- Womb State: " + (State.variables.sys_womb_state || "Normal") + "\n";
+
         var lastContext = State.variables.ai_last_narrative || "（故事開始）";
         var playerAction = State.variables.player_act || "玩家進入了場景";
-        
-        // E. 最終合體！
-        // 順序：系統指令 -> 世界觀 -> 角色卡 -> 上下文 -> 玩家動作
+        var userSystemSetting = State.variables.systemPrompt || "";
+
+        // E. 最終合體！ (順序調整：世界 -> NPC -> 數據 -> 主角設定(強調) -> 上下文)
         var finalPrompt = basePrompt + "\n\n" + 
                           worldInfo + "\n\n" + 
-                          charInfo + "\n\n" + 
+                          npcInfo + "\n\n" + 
+                          statusPrompt + "\n\n" +
+                          
+                          // ✨ 重點：把主角設定放在數據後面，並加上絕對指令 ✨
+                          "### [PLAYER AVATAR / MAIN CHARACTER - " + playerName + "]:\n" +
+                          "The user plays as " + playerName + ". \n" +
+                          "⚠️ CRITICAL INSTRUCTION: You must strictly adhere to the character's physical limitations and special traits defined below.\n" +
+                          "If the character setting specifies a 'minimum limit' (e.g., bladder capacity locked at 2000ml), treat it as an ABSOLUTE LAW. Override any conflicting physiological data if necessary.\n" +
+                          playerInfo + "\n\n" + 
+                          
                           "[User Extra Settings]: " + userSystemSetting + "\n\n" + 
                           "【Current Story Context】: " + lastContext + "\n\n" + 
                           "【Player Current Action】: " + playerAction;
+
+        /* === Debug: 在主控台印出提示詞 (按 F12 可看) === */
+        console.log("=== FINAL PROMPT SENT TO AI ===");
+        console.log(finalPrompt);
+        /* ========================================= */
 
         /* === 2. 發送請求 === */
         fetch(url, {
@@ -66,34 +127,23 @@
             body: JSON.stringify({ contents: [{ parts: [{ text: finalPrompt }] }] })
         })
         .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.error.message); });
-            }
+            if (!response.ok) return response.json().then(err => { throw new Error(err.error.message); });
             return response.json();
         })
         .then(data => {
-            try {
-                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-                    throw new Error("AI 拒絕生成內容。");
-                }
+            if (!data.candidates || !data.candidates[0].content) throw new Error("AI 拒絕生成內容。");
+            
+            var ai_text = data.candidates[0].content.parts[0].text;
+            State.variables.temp_ai_response = ai_text;
 
-                var ai_text = data.candidates[0].content.parts[0].text;
-                State.variables.temp_ai_response = ai_text;
+            $("#ai-status").html("✅ 接收成功，正在渲染...");
+            $("#ai-status").fadeOut(500); 
 
-                $("#ai-status").html("✅ 接收成功，正在渲染...");
-                $("#ai-status").fadeOut(500); 
-
-                var contentBox = document.getElementById("ai-content");
-                new Wikifier(contentBox, "<<parse_ai_data $temp_ai_response>>");
-                
-            } catch (e) {
-                console.error(e);
-                $("#ai-status").html("⚠️ 解析錯誤");
-                $("#ai-debug").show().html("<b>程式運作錯誤：</b><br>" + e.message);
-            }
+            var contentBox = document.getElementById("ai-content");
+            new Wikifier(contentBox, "<<parse_ai_data $temp_ai_response>>");
         })
         .catch(error => {
-            console.error("Error:", error);
+            console.error(e);
             $("#ai-status").html("❌ 連線錯誤");
             $("#ai-debug").show().html("<b>連線失敗原因：</b><br>" + error.message);
         });

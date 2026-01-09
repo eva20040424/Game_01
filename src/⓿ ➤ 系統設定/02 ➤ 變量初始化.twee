@@ -33,3 +33,18 @@
     setup.chars = setup.chars || {};
     setup.lore = setup.lore || {};
 <</script>>
+
+/* --- 6. 圖書管理系統初始化 (包含風格預設) --- */
+<<set $custom_chars to recall("custom_chars", {})>>
+<<set $custom_lore to recall("custom_lore", {})>>
+<<set $custom_presets to recall("custom_presets", {})>>
+
+/* 當前掛載列表 */
+<<set $active_char_ids to ["恬羽"]>>
+<<set $active_world_ids to ["隨身空間"]>>
+<<set $active_preset_id to recall("active_preset_id", "系統原廠")>>
+
+/* 強制鎖定膀胱下限 */
+<<if $sys_bladder_ml < 2000>>
+    <<set $sys_bladder_ml to 2000>>
+<</if>>
