@@ -943,83 +943,200 @@ setup.lore["隨身空間"] = `
 &lt;&lt;widget &quot;lib_content_lore&quot;&gt;&gt;
     /* ... (保持上次的內容) ... */
      &lt;div style=&quot;font-size: 0.9em;&quot;&gt;&lt;b&gt;📥 匯入世界:&lt;/b&gt;&lt;br&gt;&lt;input type=&quot;file&quot; onchange=&quot;loadTavernFile(this, &#39;lore&#39;)&quot; style=&quot;width: 100%; font-size: 0.8em;&quot;&gt;&lt;hr style=&quot;margin: 5px 0; border-color: #444;&quot;&gt;&lt;b&gt;📋 啟用列表:&lt;/b&gt;&lt;div style=&quot;max-height: 150px; overflow-y: auto; text-align: left;&quot;&gt;&lt;&lt;for _key range Object.keys(setup.lore)&gt;&gt;&lt;&lt;capture _key&gt;&gt;&lt;div style=&quot;margin-bottom: 2px;&quot;&gt;&lt;label&gt;&lt;input type=&quot;checkbox&quot; @checked=&quot;$active_world_ids.includes(_key)&quot; @onchange=&quot;&#39;toggleLibItem(\&#39;active_world_ids\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot; /&gt;&lt;span style=&quot;color: #ff99cc;&quot;&gt;🔒 _key&lt;/span&gt;&lt;/label&gt;&lt;/div&gt;&lt;&lt;/capture&gt;&gt;&lt;&lt;/for&gt;&gt;&lt;&lt;for _key range Object.keys($custom_lore)&gt;&gt;&lt;&lt;capture _key&gt;&gt;&lt;div style=&quot;margin-bottom: 2px; display:flex; align-items:center; justify-content:space-between;&quot;&gt;&lt;label&gt;&lt;input type=&quot;checkbox&quot; @checked=&quot;$active_world_ids.includes(_key)&quot; @onchange=&quot;&#39;toggleLibItem(\&#39;active_world_ids\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot; /&gt;&lt;span style=&quot;color: #66ccff;&quot;&gt;💾 _key&lt;/span&gt;&lt;/label&gt;&lt;a class=&quot;delete-btn&quot; @onclick=&quot;&#39;deleteLibItem(\&#39;lore\&#39;, \&#39;&#39; + _key + &#39;\&#39;)&#39;&quot;&gt;🗑️&lt;/a&gt;&lt;/div&gt;&lt;&lt;/capture&gt;&gt;&lt;&lt;/for&gt;&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="7" name="Start" tags="" position="850,100" size="100,100">/* CSS: 讓這個頁面的文字置中，看起來像標題頁 */
-&lt;div style=&quot;text-align: center; margin-top: 5%;&quot;&gt;
-    &lt;h1&gt;✦ 初始設定 ✦&lt;/h1&gt;
-    &lt;hr style=&quot;width: 50%; border-color: #ff69b4;&quot;&gt;
-    
-    &lt;p&gt;歡迎來到《慾門》&lt;/p&gt;
-    &lt;p&gt;在意識沉入肉體之前，請確認妳的身份資訊&lt;/p&gt;
+&lt;&lt;/widget&gt;&gt;</tw-passagedata><tw-passagedata pid="7" name="Start" tags="" position="850,100" size="100,100">/* CSS：DOL 風格樣式表（僅作用於此頁面容器） */
+&lt;style&gt;
+    /* 主容器：置中、黑底、邊框 */
+    .dol-container {
+        max-width: 500px;
+        margin: 5vh auto;
+        padding: 20px;
+        background-color: #111; /* 深色背景 */
+        border: 2px solid #444; /* 灰色邊框 */
+        box-shadow: 0 0 10px rgba(0,0,0,0.8);
+        font-family: &quot;Microsoft JhengHei&quot;, sans-serif;
+        color: #eee;
+    }
 
-    /* --- 輸入區塊 (深色背景框) --- */
-    &lt;div style=&quot;background-color: #333; padding: 20px; border-radius: 10px; display: inline-block; text-align: left; width: 300px;&quot;&gt;
+    /* 標題與分隔線 */
+    .dol-header {
+        text-align: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 10px;
+    }
+    .dol-header h1 {
+        margin: 0;
+        color: #ff7ae6; /* 粉色標題 */
+        font-size: 1.8em;
+    }
+
+    /* 設定區塊 (Fieldset) */
+    .dol-fieldset {
+        border: 1px solid #555;
+        background-color: #1a1a1a;
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        border-radius: 4px;
+    }
+    .dol-legend {
+        color: #66ccff; /* 藍色小標題 */
+        font-weight: bold;
+        font-size: 0.9em;
+        padding: 0 5px;
+        background-color: #111; /* 讓標題背景與主容器一致 */
+        border: 1px solid #555;
+    }
+
+    /* 單行設定項 (Flexbox 對齊) */
+    .dol-row {
+        display: flex;
+        justify-content: space-between; /* 左右對齊 */
+        align-items: center;            /* 垂直置中 */
+        margin-bottom: 8px;
+        padding-bottom: 5px;
+        border-bottom: 1px dashed #333; /* 虛線分隔 */
+    }
+    .dol-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    /* 標籤與輸入控制項 */
+    .dol-label {
+        color: #ccc;
+        font-weight: bold;
+    }
+    .dol-input {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* 覆蓋默認輸入框樣式 */
+    .dol-container input[type=&quot;text&quot;], 
+    .dol-container select {
+        background-color: #222;
+        color: #fff;
+        border: 1px solid #666;
+        padding: 4px 8px;
+        border-radius: 3px;
+        max-width: 180px;
+    }
+    .dol-container button {
+        background-color: #333;
+        border: 1px solid #777;
+        color: #eee;
+        cursor: pointer;
+        padding: 4px 8px;
+        font-size: 0.9em;
+        transition: background 0.2s;
+    }
+    .dol-container button:hover {
+        background-color: #555;
+        border-color: #999;
+    }
+
+    /* 底部按鈕區 */
+    .dol-actions {
+        text-align: center;
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+    .dol-actions a {
+        display: inline-block;
+        padding: 8px 15px;
+        background: #333;
+        border: 1px solid #ff7ae6;
+        color: #ff7ae6;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+    .dol-actions a:hover {
+        background: #ff7ae6;
+        color: #000;
+    }
+&lt;/style&gt;
+
+&lt;div class=&quot;dol-container&quot;&gt;
+    /* --- 標題區 --- */
+    &lt;div class=&quot;dol-header&quot;&gt;
+        &lt;h1&gt;✦ 初始設定 ✦&lt;/h1&gt;
+        &lt;div style=&quot;font-size: 0.8em; color: #888; margin-top: 5px;&quot;&gt;歡迎來到《慾門》，請確認妳的身份資訊&lt;/div&gt;
+    &lt;/div&gt;
+
+    /* --- 身份設定區塊 --- */
+    &lt;fieldset class=&quot;dol-fieldset&quot;&gt;
+        &lt;legend class=&quot;dol-legend&quot;&gt;👤 身份資訊&lt;/legend&gt;
         
-        /* 名字輸入框 */
-        &lt;p&gt;&lt;b&gt;📇 本名：&lt;/b&gt; &lt;br&gt;
-        &lt;&lt;textbox &quot;$name&quot; &quot;恬羽&quot;&gt;&gt;&lt;/p&gt;
+        &lt;div class=&quot;dol-row&quot;&gt;
+            &lt;span class=&quot;dol-label&quot;&gt;📇 本名&lt;/span&gt;
+            &lt;span class=&quot;dol-input&quot;&gt;&lt;&lt;textbox &quot;$name&quot; &quot;恬羽&quot;&gt;&gt;&lt;/span&gt;
+        &lt;/div&gt;
         
-        /* 暱稱輸入框 */
-        &lt;p&gt;&lt;b&gt;🏷️ 暱稱：&lt;/b&gt; &lt;br&gt;
-        &lt;&lt;textbox &quot;$nick&quot; &quot;羽兒&quot;&gt;&gt;&lt;/p&gt;
+        &lt;div class=&quot;dol-row&quot;&gt;
+            &lt;span class=&quot;dol-label&quot;&gt;🏷️ 暱稱&lt;/span&gt;
+            &lt;span class=&quot;dol-input&quot;&gt;&lt;&lt;textbox &quot;$nick&quot; &quot;羽兒&quot;&gt;&gt;&lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/fieldset&gt;
 
-        &lt;hr style=&quot;border-style: dashed; opacity: 0.3;&quot;&gt;
-
-        /* --- AI 連結設定 (新增區塊) --- */
-        &lt;p style=&quot;color: #66ccff;&quot;&gt;&lt;b&gt;🤖 AI 連結設定 (Google AI Studio)&lt;/b&gt;&lt;/p&gt;
+    /* --- AI 連結設定區塊 --- */
+    &lt;fieldset class=&quot;dol-fieldset&quot;&gt;
+        &lt;legend class=&quot;dol-legend&quot;&gt;🤖 AI 連結設定 (Google AI Studio)&lt;/legend&gt;
         
         /* 模型選擇 */
-        &lt;p style=&quot;font-size: 0.9em;&quot;&gt;&lt;b&gt;🧠 模型選擇：&lt;/b&gt;&lt;br&gt;
-        &lt;&lt;listbox &quot;$aiModel&quot; autoselect&gt;&gt;
-            &lt;&lt;option &quot;Gemini 3 Flash (快速)&quot; &quot;gemini-3-flash-preview&quot;&gt;&gt;
-            &lt;&lt;option &quot;Gemini 3 Pro (強大)&quot; &quot;gemini-3-pro-preview&quot;&gt;&gt;
-        &lt;&lt;/listbox&gt;&gt;&lt;/p&gt;
+        &lt;div class=&quot;dol-row&quot;&gt;
+            &lt;span class=&quot;dol-label&quot;&gt;🧠 模型選擇&lt;/span&gt;
+            &lt;span class=&quot;dol-input&quot;&gt;
+                &lt;&lt;listbox &quot;$aiModel&quot; autoselect&gt;&gt;
+                    &lt;&lt;option &quot;Gemini 3 Flash (快速)&quot; &quot;gemini-3-flash-preview&quot;&gt;&gt;
+                    &lt;&lt;option &quot;Gemini 3 Pro (強大)&quot; &quot;gemini-3-pro-preview&quot;&gt;&gt;
+                &lt;&lt;/listbox&gt;&gt;
+            &lt;/span&gt;
+        &lt;/div&gt;
 
-        /* 金鑰管理：選擇舊有或輸入新增 */
-        &lt;p style=&quot;font-size: 0.9em;&quot;&gt;&lt;b&gt;🔑 API 金鑰管理：&lt;/b&gt;&lt;br&gt;
-        
-        /* 1. 若有存檔金鑰，顯示切換選單 */
+        /* 舊金鑰切換 (若有) */
         &lt;&lt;if $keyVault.length &gt; 0&gt;&gt;
-            &lt;span style=&quot;font-size:0.8em; color:#aaa;&quot;&gt;－ 從儲存庫切換：&lt;/span&gt;&lt;br&gt;
-            &lt;&lt;listbox &quot;$apiKey&quot; autoselect&gt;&gt;
-                &lt;&lt;optionsfrom $keyVault&gt;&gt;
-            &lt;&lt;/listbox&gt;&gt;
-            
-            /* 【修正點 1】使用 memorize 函數來記憶 */
-            &lt;&lt;button &quot;✅ 確認切換&quot;&gt;&gt;
-                &lt;&lt;run memorize(&quot;apiKey&quot;, $apiKey)&gt;&gt;
-                &lt;&lt;run memorize(&quot;aiModel&quot;, $aiModel)&gt;&gt;
-                &lt;&lt;run UI.alert(&quot;已切換並記憶金鑰！&quot;)&gt;&gt;
-            &lt;&lt;/button&gt;&gt;
-            &lt;br&gt;
+            &lt;div class=&quot;dol-row&quot;&gt;
+                &lt;span class=&quot;dol-label&quot;&gt;🔑 切換金鑰&lt;/span&gt;
+                &lt;span class=&quot;dol-input&quot;&gt;
+                    &lt;&lt;listbox &quot;$apiKey&quot; autoselect&gt;&gt;
+                        &lt;&lt;optionsfrom $keyVault&gt;&gt;
+                    &lt;&lt;/listbox&gt;&gt;
+                    &lt;&lt;button &quot;✅&quot;&gt;&gt;
+                        &lt;&lt;run memorize(&quot;apiKey&quot;, $apiKey)&gt;&gt;
+                        &lt;&lt;run memorize(&quot;aiModel&quot;, $aiModel)&gt;&gt;
+                        &lt;&lt;run UI.alert(&quot;已切換並記憶金鑰！&quot;)&gt;&gt;
+                    &lt;&lt;/button&gt;&gt;
+                &lt;/span&gt;
+            &lt;/div&gt;
         &lt;&lt;/if&gt;&gt;
-        
-        /* 2. 新增金鑰輸入框 */
-        &lt;span style=&quot;font-size:0.8em; color:#aaa;&quot;&gt;－ 或輸入新金鑰：&lt;/span&gt;&lt;br&gt;
-        &lt;&lt;textbox &quot;_newKey&quot; &quot;&quot;&gt;&gt; 
-        
-        /* 【修正點 2】使用 memorize 函數來永久記憶 */
-        &lt;&lt;button &quot;💾 存入並永久記憶&quot;&gt;&gt;
-            &lt;&lt;if _newKey neq &quot;&quot;&gt;&gt;
-                /* 1. 更新金鑰庫 */
-                &lt;&lt;run $keyVault.pushUnique(_newKey)&gt;&gt;
-                
-                /* 2. 設定當前金鑰 */
-                &lt;&lt;set $apiKey to _newKey&gt;&gt;
-                
-                /* 3. 將資料寫入瀏覽器硬碟 (Key, Value) */
-                &lt;&lt;run memorize(&quot;apiKey&quot;, $apiKey)&gt;&gt;
-                &lt;&lt;run memorize(&quot;keyVault&quot;, $keyVault)&gt;&gt;
-                &lt;&lt;run memorize(&quot;aiModel&quot;, $aiModel)&gt;&gt;
 
-                &lt;&lt;goto &quot;Start&quot;&gt;&gt; /* 刷新頁面 */
-            &lt;&lt;/if&gt;&gt;
-        &lt;&lt;/button&gt;&gt;
-        &lt;/p&gt;
-    
-    /* 按鈕：前往下一個場景 */
-歡迎來到測試房。
-[[開始 AI 互動-&gt;Action_Handler][$player_act = &quot;玩家醒來，觀察四周&quot;]]
-[[測試真假-&gt;Action_Handler][$player_act = &quot;請告訴我 123 乘以 456 等於多少&quot;]]
+        /* 新增金鑰 */
+        &lt;div class=&quot;dol-row&quot;&gt;
+            &lt;span class=&quot;dol-label&quot;&gt;➕ 新增金鑰&lt;/span&gt;
+            &lt;span class=&quot;dol-input&quot;&gt;
+                &lt;&lt;textbox &quot;_newKey&quot; &quot;&quot;&gt;&gt;
+                &lt;&lt;button &quot;💾&quot;&gt;&gt;
+                    &lt;&lt;if _newKey neq &quot;&quot;&gt;&gt;
+                        &lt;&lt;run $keyVault.pushUnique(_newKey)&gt;&gt;
+                        &lt;&lt;set $apiKey to _newKey&gt;&gt;
+                        &lt;&lt;run memorize(&quot;apiKey&quot;, $apiKey)&gt;&gt;
+                        &lt;&lt;run memorize(&quot;keyVault&quot;, $keyVault)&gt;&gt;
+                        &lt;&lt;run memorize(&quot;aiModel&quot;, $aiModel)&gt;&gt;
+                        &lt;&lt;goto &quot;Start&quot;&gt;&gt; /* 刷新頁面 */
+                    &lt;&lt;/if&gt;&gt;
+                &lt;&lt;/button&gt;&gt;
+            &lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/fieldset&gt;
+
+    /* --- 底部按鈕區 --- */
+    &lt;div class=&quot;dol-actions&quot;&gt;
+        [[開始 AI 互動-&gt;Action_Handler][$player_act = &quot;玩家醒來，觀察四周&quot;]]
+        [[測試真假-&gt;Action_Handler][$player_act = &quot;請告訴我 123 乘以 456 等於多少&quot;]]
+    &lt;/div&gt;
 
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="8" name="💠開門💠" tags="" position="975,100" size="100,100">宇宙諸界，隨心遨遊。
 今欲往？
